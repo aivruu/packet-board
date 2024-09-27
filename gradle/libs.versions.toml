@@ -1,0 +1,21 @@
+[versions]
+# Versions set-up for gradle-plugins and required APIs and libraries.
+shadow = "8.1.8"
+spotless = "6.13.0"
+indra = "3.1.3"
+paperweight = "1.7.2"
+
+paper = "1.21.1-R0.1-SNAPSHOT"
+configurate = "4.1.2"
+placeholderapi = "2.11.6"
+
+[libraries]
+paper = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
+configurate = { module = "org.spongepowered:configurate-hocon", version.ref = "configurate" }
+placeholderapi = { group = "me.clip", name = "placeholderapi", version.ref = "placeholderapi" }
+
+[plugins]
+shadow = { id = "io.github.goooler.shadow", version.ref = "shadow" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+indra = { id = "net.kyori.indra", version.ref = "indra" }
+paperweight = { id = "io.papermc.paperweight.userdev", version.ref = "paperweight" }
