@@ -1,0 +1,7 @@
+name: PacketBoard
+main: io.github.aivruu.packetboard.PacketBoardPlugin
+loader: io.github.aivruu.packetboard.loader.PluginLibraryLoader
+authors: [ aivruu ]
+
+api-version: "1.20"
+version: ${version}
