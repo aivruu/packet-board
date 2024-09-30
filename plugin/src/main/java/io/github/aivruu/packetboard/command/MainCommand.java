@@ -18,29 +18,63 @@ package io.github.aivruu.packetboard.command;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import io.github.aivruu.packetboard.manager.BoardManager;
+import io.github.aivruu.packetboard.PacketBoardPlugin;
+import io.github.aivruu.packetboard.component.ComponentParserUtils;
+import io.github.aivruu.packetboard.config.ConfigurationProvider;
+import io.github.aivruu.packetboard.config.object.MessagesConfigModel;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import net.kyori.adventure.text.Component;
-import org.bukkit.entity.Player;
+
+import java.util.List;
 
 public class MainCommand implements RegistrableCommandModel {
-  private final BoardManager boardManager;
+  private final PacketBoardPlugin plugin;
+  private final ConfigurationProvider<MessagesConfigModel> messagesConfigProvider;
 
-  public MainCommand(final BoardManager boardManager) {
-    this.boardManager = boardManager;
+  public MainCommand(final PacketBoardPlugin plugin, final ConfigurationProvider<MessagesConfigModel> messagesConfigProvider) {
+    this.plugin = plugin;
+    this.messagesConfigProvider = messagesConfigProvider;
+  }
+
+  @Override
+  public List<String> alias() {
+    return List.of("pb", "pboard", "packetb");
   }
 
   @Override
   @SuppressWarnings("UnstableApiUsage")
   public LiteralCommandNode<CommandSourceStack> register() {
     return Commands.literal("packetboard")
-      .executes(ctx -> {
-        final var playerSender = (Player) ctx.getSource().getSender();
-        this.boardManager.title(playerSender, Component.text("Title Example"));
-        this.boardManager.lines(playerSender, Component.text("Score 1"), Component.text("Score 2"));
+      .executes(commandContext -> {
+        commandContext.getSource()
+          .getSender()
+          .sendMessage(ComponentParserUtils.apply("<gradient:yellow:green>Running PacketBoard plugin on version '1.0.0'."));
         return Command.SINGLE_SUCCESS;
       })
+      .then(Commands.literal("help")
+        .requires(source -> source.getSender().hasPermission("packetboard.command.help"))
+        .executes(commandContext -> {
+          commandContext.getSource().getSender().sendMessage(ComponentParserUtils.apply(
+            this.messagesConfigProvider.configModel().help));
+          return Command.SINGLE_SUCCESS;
+        })
+      )
+      .then(Commands.literal("reload")
+        .requires(source -> source.getSender().hasPermission("packetboard.command.reload"))
+        .executes(commandContext -> {
+          final var messages = this.messagesConfigProvider.configModel();
+          final var sender = commandContext.getSource().getSender();
+          final var reloadStatus = this.plugin.reload();
+          if (reloadStatus == PacketBoardPlugin.SUCCESSFUL_RELOAD_STATUS) {
+            sender.sendMessage(ComponentParserUtils.apply(messages.reloadSuccess));
+          } else if (reloadStatus == PacketBoardPlugin.CONFIGURATION_RELOAD_ANOMALY_STATUS) {
+            sender.sendMessage(ComponentParserUtils.apply(messages.reloadFailedDueToConfiguration));
+          } else {
+            sender.sendMessage(ComponentParserUtils.apply(messages.reloadFailedDueToExecutors));
+          }
+          return Command.SINGLE_SUCCESS;
+        })
+      )
       .build();
   }
 }
