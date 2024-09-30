@@ -19,7 +19,11 @@ package io.github.aivruu.packetboard.command;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 
+import java.util.List;
+
 @SuppressWarnings("UnstableApiUsage")
 public interface RegistrableCommandModel {
+  List<String> alias();
+
   LiteralCommandNode<CommandSourceStack> register();
 }
