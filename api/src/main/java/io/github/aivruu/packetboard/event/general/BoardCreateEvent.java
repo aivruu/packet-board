@@ -14,27 +14,28 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-package io.github.aivruu.packetboard.event;
+package io.github.aivruu.packetboard.event.general;
 
+import io.github.aivruu.packetboard.board.CachedBoardModel;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
 /**
- * This event is fired when the player toggles' scoreboard to visible, or invisible.
+ * This event is fired once the player joins to the server before their scoreboard is created.
  *
  * @since 1.0.0
  */
-public class BoardToggleEvent extends Event implements Cancellable {
+public class BoardCreateEvent extends Event implements Cancellable {
   private static final HandlerList HANDLER_LIST = new HandlerList();
   private final Player player;
-  private final boolean previousVisibilityState;
+  private final CachedBoardModel cachedBoardModel;
   private boolean cancelled;
 
-  public BoardToggleEvent(final Player player, final boolean previousVisibilityState) {
+  public BoardCreateEvent(final Player player, final CachedBoardModel cachedBoardModel) {
     this.player = player;
-    this.previousVisibilityState = previousVisibilityState;
+    this.cachedBoardModel = cachedBoardModel;
   }
 
   /**
@@ -48,13 +49,13 @@ public class BoardToggleEvent extends Event implements Cancellable {
   }
 
   /**
-   * Returns the previous visibility state of the player's scoreboard.
+   * Returns the created board-model for the player during this event.
    *
-   * @return The previous visibility state of the player's scoreboard.
+   * @return The created board-model for the player.
    * @since 1.0.0
    */
-  public boolean previousVisibilityState() {
-    return this.previousVisibilityState;
+  public CachedBoardModel board() {
+    return this.cachedBoardModel;
   }
 
   @Override

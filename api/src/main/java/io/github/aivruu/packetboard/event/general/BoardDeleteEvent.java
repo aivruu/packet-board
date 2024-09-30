@@ -14,26 +14,24 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-package io.github.aivruu.packetboard.event;
+package io.github.aivruu.packetboard.event.general;
 
-import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
 /**
- * This event is fired when the player's scoreboard's title is modified.
+ * This event is fired once the player leaves the server and their scoreboard is deleted,
+ * and the model is removed from the cache.
  *
  * @since 1.0.0
  */
-public class BoardTitleModificationEvent extends Event {
+public class BoardDeleteEvent extends Event {
   private static final HandlerList HANDLER_LIST = new HandlerList();
   private final Player player;
-  private final Component newTitle;
 
-  public BoardTitleModificationEvent(final Player player, final Component newTitle) {
+  public BoardDeleteEvent(final Player player) {
     this.player = player;
-    this.newTitle = newTitle;
   }
 
   /**
@@ -44,16 +42,6 @@ public class BoardTitleModificationEvent extends Event {
    */
   public Player player() {
     return this.player;
-  }
-
-  /**
-   * Returns the new title of the player's scoreboard.
-   *
-   * @return The new title of the player's scoreboard.
-   * @since 1.0.0
-   */
-  public Component newTitle() {
-    return this.newTitle;
   }
 
   @Override

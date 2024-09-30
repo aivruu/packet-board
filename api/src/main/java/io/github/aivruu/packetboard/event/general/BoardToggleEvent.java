@@ -14,24 +14,27 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-package io.github.aivruu.packetboard.event;
+package io.github.aivruu.packetboard.event.general;
 
 import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
 /**
- * This event is fired once the player leaves the server and their scoreboard is deleted,
- * and the model is removed from the cache.
+ * This event is fired when the player toggles' scoreboard to visible, or invisible.
  *
  * @since 1.0.0
  */
-public class BoardDeleteEvent extends Event {
+public class BoardToggleEvent extends Event implements Cancellable {
   private static final HandlerList HANDLER_LIST = new HandlerList();
   private final Player player;
+  private final boolean previousVisibilityState;
+  private boolean cancelled;
 
-  public BoardDeleteEvent(final Player player) {
+  public BoardToggleEvent(final Player player, final boolean previousVisibilityState) {
     this.player = player;
+    this.previousVisibilityState = previousVisibilityState;
   }
 
   /**
@@ -42,6 +45,26 @@ public class BoardDeleteEvent extends Event {
    */
   public Player player() {
     return this.player;
+  }
+
+  /**
+   * Returns the previous visibility state of the player's scoreboard.
+   *
+   * @return The previous visibility state of the player's scoreboard.
+   * @since 1.0.0
+   */
+  public boolean previousVisibilityState() {
+    return this.previousVisibilityState;
+  }
+
+  @Override
+  public boolean isCancelled() {
+    return this.cancelled;
+  }
+
+  @Override
+  public void setCancelled(final boolean cancel) {
+    this.cancelled = cancel;
   }
 
   @Override

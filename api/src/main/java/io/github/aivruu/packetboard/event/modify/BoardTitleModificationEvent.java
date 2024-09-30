@@ -14,7 +14,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-package io.github.aivruu.packetboard.event;
+package io.github.aivruu.packetboard.event.modify;
 
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
@@ -22,18 +22,19 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
 /**
- * This event is fired when the player's scoreboard one, or multiple lines are modified, including deletion.
+ * This event is fired when the player's scoreboard's title is modified, and its {@link io.github.aivruu.packetboard.board.CachedBoardModel}
+ * is updated in the cache-repository
  *
  * @since 1.0.0
  */
-public class BoardLinesModificationEvent extends Event {
+public class BoardTitleModificationEvent extends Event {
   private static final HandlerList HANDLER_LIST = new HandlerList();
   private final Player player;
-  private final Component[] newLines;
+  private final Component newTitle;
 
-  public BoardLinesModificationEvent(final Player player, final Component[] newLines) {
+  public BoardTitleModificationEvent(final Player player, final Component newTitle) {
     this.player = player;
-    this.newLines = newLines;
+    this.newTitle = newTitle;
   }
 
   /**
@@ -47,13 +48,13 @@ public class BoardLinesModificationEvent extends Event {
   }
 
   /**
-   * Returns the new lines that will be set to the player's scoreboard.
+   * Returns the new title of the player's scoreboard.
    *
-   * @return The new lines that will be set to the player's scoreboard.
+   * @return The new title of the player's scoreboard.
    * @since 1.0.0
    */
-  public Component[] newLines() {
-    return this.newLines;
+  public Component newTitle() {
+    return this.newTitle;
   }
 
   @Override

@@ -14,28 +14,27 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-package io.github.aivruu.packetboard.event;
+package io.github.aivruu.packetboard.event.modify;
 
-import io.github.aivruu.packetboard.board.CachedBoardModel;
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
 /**
- * This event is fired once the player joins to the server before their scoreboard is created.
+ * This event is fired when the player's scoreboard-lines are modified, and its {@link io.github.aivruu.packetboard.board.CachedBoardModel}
+ * is updated in the cache-repository.
  *
  * @since 1.0.0
  */
-public class BoardCreateEvent extends Event implements Cancellable {
+public class BoardLinesModificationEvent extends Event {
   private static final HandlerList HANDLER_LIST = new HandlerList();
   private final Player player;
-  private final CachedBoardModel cachedBoardModel;
-  private boolean cancelled;
+  private final Component[] newLines;
 
-  public BoardCreateEvent(final Player player, final CachedBoardModel cachedBoardModel) {
+  public BoardLinesModificationEvent(final Player player, final Component[] newLines) {
     this.player = player;
-    this.cachedBoardModel = cachedBoardModel;
+    this.newLines = newLines;
   }
 
   /**
@@ -49,23 +48,13 @@ public class BoardCreateEvent extends Event implements Cancellable {
   }
 
   /**
-   * Returns the created board-model for the player during this event.
+   * Returns the new lines that will be set to the player's scoreboard.
    *
-   * @return The created board-model for the player.
+   * @return The new lines that will be set to the player's scoreboard.
    * @since 1.0.0
    */
-  public CachedBoardModel board() {
-    return this.cachedBoardModel;
-  }
-
-  @Override
-  public boolean isCancelled() {
-    return this.cancelled;
-  }
-
-  @Override
-  public void setCancelled(final boolean cancel) {
-    this.cancelled = cancel;
+  public Component[] newLines() {
+    return this.newLines;
   }
 
   @Override
