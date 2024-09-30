@@ -43,8 +43,6 @@ import java.util.Optional;
 public class VersionPacketProviderImpl implements VersionPacketProviderModel {
   private static final Optional<NumberFormat> NUMBER_FORMAT = Optional.of(BlankFormat.INSTANCE);
   private final ServerScoreboard serverScoreboard = MinecraftServer.getServer().getScoreboard();
-  private ClientboundSetObjectivePacket clientboundSetObjectivePacket;
-  private ClientboundSetDisplayObjectivePacket clientboundSetDisplayObjectivePacket;
   private ClientboundSetScorePacket clientboundSetScorePacket;
 
   @Override
@@ -53,25 +51,15 @@ public class VersionPacketProviderImpl implements VersionPacketProviderModel {
     final var playerOwnerId = player.getUniqueId().toString();
     // Scoreboard objectives declaration and packet-sending.
     final var objective = this.serverScoreboard.addObjective(scoreboardObjectiveId, ObjectiveCriteria.DUMMY,
-      new AdventureComponent(title), ObjectiveCriteria.RenderType.INTEGER, true, BlankFormat.INSTANCE);
-    this.sendObjectivePacket(serverPlayerConnection, objective, ClientboundSetObjectivePacket.METHOD_ADD);
-    this.sendDisplayObjectivePacket(serverPlayerConnection, objective);
+      new AdventureComponent(title), ObjectiveCriteria.RenderType.INTEGER, false, BlankFormat.INSTANCE);
+    serverPlayerConnection.send(new ClientboundSetObjectivePacket(objective, ClientboundSetObjectivePacket.METHOD_REMOVE));
+    serverPlayerConnection.send(new ClientboundSetObjectivePacket(objective, ClientboundSetObjectivePacket.METHOD_ADD));
+    serverPlayerConnection.send(new ClientboundSetDisplayObjectivePacket(DisplaySlot.SIDEBAR, objective));
     // Scoreboard scores declaration and packet-sending.
     for (int i = 0; i < lines.length; i++) {
       this.sendScorePacket(serverPlayerConnection, playerOwnerId, objective.getName(),
         (lines.length - i), new AdventureComponent(lines[i]));
     }
-  }
-
-  private void sendObjectivePacket(final ServerPlayerConnection serverPlayerConnection, final Objective objective, final int mode) {
-    this.clientboundSetObjectivePacket = new ClientboundSetObjectivePacket(objective, mode);
-    serverPlayerConnection.send(this.clientboundSetObjectivePacket);
-  }
-
-  private void sendDisplayObjectivePacket(final ServerPlayerConnection serverPlayerConnection, final Objective objective) {
-    this.clientboundSetDisplayObjectivePacket = new ClientboundSetDisplayObjectivePacket(
-      DisplaySlot.SIDEBAR, objective);
-    serverPlayerConnection.send(this.clientboundSetDisplayObjectivePacket);
   }
 
   private void sendScorePacket(final ServerPlayerConnection serverPlayerConnection, final String ownerName, final String objectiveName,
@@ -83,10 +71,18 @@ public class VersionPacketProviderImpl implements VersionPacketProviderModel {
     serverPlayerConnection.send(clientboundSetScorePacket);
   }
 
+  private void sendObjectivePackets(final ServerPlayerConnection serverPlayerConnection, final Objective objective) {
+    // The objective for this player's scoreboard shouldn't be null at this point.
+    serverPlayerConnection.send(new ClientboundSetObjectivePacket(objective, ClientboundSetObjectivePacket.METHOD_REMOVE));
+    serverPlayerConnection.send(new ClientboundSetObjectivePacket(objective, ClientboundSetObjectivePacket.METHOD_ADD));
+    serverPlayerConnection.send(new ClientboundSetDisplayObjectivePacket(DisplaySlot.SIDEBAR, objective));
+  }
+
   @Override
   public void sendLines(final Player player, final String scoreboardObjectiveId, final Component... lines) {
     final var serverPlayerConnection = ((CraftPlayer) player).getHandle().connection;
     final var objective = this.serverScoreboard.getObjective(scoreboardObjectiveId);
+    this.sendObjectivePackets(serverPlayerConnection, objective);
     for (int i = 0; i < lines.length; i++) {
       this.sendScorePacket(serverPlayerConnection, player.getName(), objective.getName(),
         (lines.length - i), new AdventureComponent(lines[i]));
@@ -96,36 +92,28 @@ public class VersionPacketProviderImpl implements VersionPacketProviderModel {
   @Override
   public void sendLine(final Player player, final int line, final Component text, final String scoreboardObjectiveId) {
     final var serverPlayerConnection = ((CraftPlayer) player).getHandle().connection;
-    final var playerOwnerId = player.getUniqueId().toString();
     final var objective = this.serverScoreboard.getObjective(scoreboardObjectiveId);
-    this.sendScorePacket(serverPlayerConnection, playerOwnerId, objective.getName(),
+    this.sendObjectivePackets(serverPlayerConnection, objective);
+    this.sendScorePacket(serverPlayerConnection, player.getUniqueId().toString(), objective.getName(),
       line, new AdventureComponent(text));
   }
 
   @Override
   public void sendTitle(final Player player, final Component title, final String scoreboardObjectiveId) {
     final var serverPlayerConnection = ((CraftPlayer) player).getHandle().connection;
+    final var objective = this.serverScoreboard.getObjective(scoreboardObjectiveId);
     // The objective for this player's scoreboard never will be null at this point.
-    this.serverScoreboard.removeObjective(this.serverScoreboard.getObjective(scoreboardObjectiveId));
-    final var newObjective = this.serverScoreboard.addObjective(scoreboardObjectiveId, ObjectiveCriteria.DUMMY,
-      new AdventureComponent(title),
-      ObjectiveCriteria.RenderType.INTEGER, true, BlankFormat.INSTANCE);
-    this.sendObjectivePacket(serverPlayerConnection, newObjective, ClientboundSetObjectivePacket.METHOD_CHANGE);
-    this.sendDisplayObjectivePacket(serverPlayerConnection, newObjective);
+    objective.setDisplayName(new AdventureComponent(title));
+    serverPlayerConnection.send(new ClientboundSetObjectivePacket(objective, ClientboundSetObjectivePacket.METHOD_CHANGE));
   }
 
   @Override
   public void delete(final Player player, final String scoreboardObjectiveId) {
-    final var serverPlayerConnection = ((CraftPlayer) player).getHandle().connection;
     final var objective = this.serverScoreboard.getObjective(scoreboardObjectiveId);
     // The objective for this player's scoreboard never will be null at this point.
+    ((CraftPlayer) player).getHandle().connection
+      .send(new ClientboundSetObjectivePacket(objective, ClientboundSetObjectivePacket.METHOD_REMOVE));
     this.serverScoreboard.removeObjective(objective);
-    // Scoreboard objective packets initialization with removal params and sending.
-    this.clientboundSetObjectivePacket = new ClientboundSetObjectivePacket(objective, ClientboundSetObjectivePacket.METHOD_REMOVE);
-    serverPlayerConnection.send(this.clientboundSetObjectivePacket);
-  }
-
-  private int scoreByLineNumber(final int line, final Component... lines) {
-    return lines.length - line - 1;
+    System.out.println("Removed.");
   }
 }
