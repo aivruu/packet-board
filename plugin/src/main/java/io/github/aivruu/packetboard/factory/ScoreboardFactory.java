@@ -16,20 +16,17 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 package io.github.aivruu.packetboard.factory;
 
-import io.github.aivruu.packetboard.component.ComponentParserUtils;
+import io.github.aivruu.packetboard.util.ComponentParserUtils;
 import io.github.aivruu.packetboard.config.object.SettingsConfigModel;
 import io.github.aivruu.packetboard.manager.BoardManager;
-import net.luckperms.api.model.user.UserManager;
-import org.bukkit.Bukkit;
+import io.github.aivruu.packetboard.util.LuckPermsUtil;
 import org.bukkit.entity.Player;
 
 public class ScoreboardFactory {
   private final BoardManager boardManager;
-  private final UserManager luckPermsUserManager;
 
-  public ScoreboardFactory(final BoardManager boardManager, final UserManager luckPermsUserManager) {
+  public ScoreboardFactory(final BoardManager boardManager) {
     this.boardManager = boardManager;
-    this.luckPermsUserManager = luckPermsUserManager;
   }
 
   public void create(final Player player, final SettingsConfigModel config) {
@@ -70,17 +67,12 @@ public class ScoreboardFactory {
   }
 
   private void fromGroupSections(final SettingsConfigModel config, final Player player) {
-    // This mode requires LuckPerms available for groups settings.
-    if (Bukkit.getPluginManager().getPlugin("LuckPerms") == null) {
-      return;
-    }
     for (final var groupSection : config.scoreboardGroup) {
-      final var luckPermsUser = this.luckPermsUserManager.getUser(player.getUniqueId());
+      final var playerGroup = LuckPermsUtil.primaryGroup(player.getUniqueId());
       // Check if player's user information is available, and its group can see this scoreboard.
-      if ((luckPermsUser == null) || !luckPermsUser.getPrimaryGroup().equals(groupSection.designedGroup)) {
+      if ((playerGroup == null) || !playerGroup.equals(groupSection.designedGroup)) {
         continue;
       }
-      // Group check by LuckPerms' API.
       this.boardManager.create(player, ComponentParserUtils.apply(groupSection.title), groupSection.lines);
     }
   }
