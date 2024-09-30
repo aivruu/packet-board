@@ -24,11 +24,6 @@ import org.spongepowered.configurate.objectmapping.meta.Comment;
 @ConfigSerializable
 public class SettingsConfigModel {
   @Comment("""
-    If during the player's scoreboard's creation any error happens, this will be notified to the
-    player.""")
-  public boolean notifyScoreboardCreationErrors = false;
-
-  @Comment("""
     This mean that the plugin will use the animated-title feature, only for the 'GLOBAL'
     mode.""")
   public boolean enableAnimatedTitleFeature = false;
@@ -36,16 +31,13 @@ public class SettingsConfigModel {
   @Comment("This mean that the scoreboard's lines will be be updated every 'x' ticks-amount, or not.")
   public boolean enableLinesRefreshing = true;
 
-  @Comment("""
-    The refreshing-rate for the animated-title.
-    For this setting, the value is based-on animated-title's content size, don't exceed the range
-    of the content-array.""")
-  public byte animatedTitleUpdateRate = 1;
+  @Comment("The refreshing-rate for the scoreboard's animated-title.")
+  public byte animatedTitleUpdateRateInTicks = 1;
 
   @Comment("""
     The refreshing-rate for the scoreboard's lines.
     As guide, 20 ticks -> 1 second.""")
-  public byte linesUpdateRate = 20;
+  public byte linesUpdateRateInTicks = 20;
 
   @Comment("""
     The mode that will run the plugin's scoreboards during runtime.
@@ -140,11 +132,7 @@ public class SettingsConfigModel {
   @ConfigSerializable
   public static class BoardGroupSection {
     @Comment("The group, or groups that could see this scoreboard-format.")
-    public String[] groups = {
-      "dev",
-      "admin",
-      "owner"
-    };
+    public String designedGroup = "dev";
 
     @Comment("The scoreboard-title for this group, or groups.")
     public String title = "<gradient:blue:green><b>PACKETBOARD | EXCLUSIVE";
