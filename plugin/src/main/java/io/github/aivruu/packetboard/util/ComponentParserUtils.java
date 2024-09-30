@@ -14,7 +14,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-package io.github.aivruu.packetboard.component;
+package io.github.aivruu.packetboard.util;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -25,6 +25,7 @@ public class ComponentParserUtils {
   private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
   public static final PlainTextComponentSerializer PLAIN_TEXT_COMPONENT_SERIALIZER
     = PlainTextComponentSerializer.plainText();
+
   public static Component apply(final String text, final TagResolver... placeholders) {
     return MINI_MESSAGE.deserialize(text, placeholders);
   }
