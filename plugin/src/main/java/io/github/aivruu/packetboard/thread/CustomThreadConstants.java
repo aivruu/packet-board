@@ -20,5 +20,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 public class CustomThreadConstants {
+  // Used to define max-thread-pool size for the scoreboards' two threads.
   public static final ScheduledExecutorService THREAD_POOL_EXECUTOR = Executors.newScheduledThreadPool(2);
 }
