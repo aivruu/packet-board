@@ -19,7 +19,7 @@ package io.github.aivruu.packetboard.command;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.github.aivruu.packetboard.PacketBoardPlugin;
-import io.github.aivruu.packetboard.component.ComponentParserUtils;
+import io.github.aivruu.packetboard.util.ComponentParserUtils;
 import io.github.aivruu.packetboard.config.ConfigurationProvider;
 import io.github.aivruu.packetboard.config.object.MessagesConfigModel;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -64,13 +64,10 @@ public class MainCommand implements RegistrableCommandModel {
         .executes(commandContext -> {
           final var messages = this.messagesConfigProvider.configModel();
           final var sender = commandContext.getSource().getSender();
-          final var reloadStatus = this.plugin.reload();
-          if (reloadStatus == PacketBoardPlugin.SUCCESSFUL_RELOAD_STATUS) {
+          if (this.plugin.reload()) {
             sender.sendMessage(ComponentParserUtils.apply(messages.reloadSuccess));
-          } else if (reloadStatus == PacketBoardPlugin.CONFIGURATION_RELOAD_ANOMALY_STATUS) {
-            sender.sendMessage(ComponentParserUtils.apply(messages.reloadFailedDueToConfiguration));
           } else {
-            sender.sendMessage(ComponentParserUtils.apply(messages.reloadFailedDueToExecutors));
+            sender.sendMessage(ComponentParserUtils.apply(messages.reloadFailed));
           }
           return Command.SINGLE_SUCCESS;
         })
