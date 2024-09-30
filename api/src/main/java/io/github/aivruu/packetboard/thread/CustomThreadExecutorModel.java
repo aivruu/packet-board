@@ -33,8 +33,8 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class CustomThreadExecutorModel implements Runnable, CachableModel {
   private final String id;
-  protected final RepositoryModel<CachedBoardModel> boardRepository;
   private final ScheduledExecutorService executorService;
+  protected final RepositoryModel<CachedBoardModel> boardRepository;
   // Initial index-value for any created custom-thread-executor model.
   protected byte index = 0;
 
