@@ -16,7 +16,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 package io.github.aivruu.packetboard.config;
 
-import io.github.aivruu.packetboard.component.ComponentSerializer;
+import io.github.aivruu.packetboard.serializer.ComponentSerializer;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.configurate.ConfigurateException;
