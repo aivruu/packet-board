@@ -17,7 +17,6 @@
 package io.github.aivruu.packetboard.thread.impl;
 
 import io.github.aivruu.packetboard.board.CachedBoardModel;
-import io.github.aivruu.packetboard.config.ConfigurationProvider;
 import io.github.aivruu.packetboard.config.object.SettingsConfigModel;
 import io.github.aivruu.packetboard.placeholder.PlaceholderParsingUtils;
 import io.github.aivruu.packetboard.repository.RepositoryModel;
@@ -27,31 +26,28 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
 public class AsyncLinesUpdateThread extends CustomThreadExecutorModel {
-  private ConfigurationProvider<SettingsConfigModel> settingsConfigProvider;
+  private SettingsConfigModel config;
 
-  public AsyncLinesUpdateThread(final RepositoryModel<CachedBoardModel> boardRepository,
-                                final ConfigurationProvider<SettingsConfigModel> settingsConfigProvider) {
+  public AsyncLinesUpdateThread(final RepositoryModel<CachedBoardModel> boardRepository, final SettingsConfigModel config) {
     super("scoreboard-lines-updater-thread", boardRepository, CustomThreadConstants.THREAD_POOL_EXECUTOR);
-    this.settingsConfigProvider = settingsConfigProvider;
+    this.config = config;
   }
 
-  public void settingsConfigProvider(final ConfigurationProvider<SettingsConfigModel> settingsConfigProvider) {
-    this.settingsConfigProvider = settingsConfigProvider;
+  public void configModel(final SettingsConfigModel updatedConfigModel) {
+    this.config = updatedConfigModel;
   }
 
   @Override
   public void run() {
-    // Avoid on-runtime errors due to out of range for content-array index.
-    final var config = this.settingsConfigProvider.configModel();
     for (final var cachedBoardModel : this.boardRepository.findAllSync()) {
       if (!cachedBoardModel.visible()) continue;
       // Internal lines processing depending on selected scoreboard-mode.
-      this.processIteratedBoard(config, this.index, cachedBoardModel);
+      this.processIteratedBoard(this.config, this.index, cachedBoardModel);
     }
   }
 
   private byte validateIndexValue(byte index, int limit) {
-    if (index++ >= limit - 1) index = 0;
+    if (index++ >= (limit - 1)) index = 0;
     return index;
   }
 
