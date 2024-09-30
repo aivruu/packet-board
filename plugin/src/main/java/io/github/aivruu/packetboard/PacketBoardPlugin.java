@@ -117,9 +117,10 @@ public final class PacketBoardPlugin extends JavaPlugin implements PacketBoard {
   @SuppressWarnings("UnstableApiUsage")
   private void registerCommands(final RegistrableCommandModel... registrableCommandModels) {
     super.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
+      final var commands = event.registrar();
       for (final var registrableCommandModel : registrableCommandModels) {
         // Register commands attaching its [LiteralCommandNode] and it's alias.
-        event.registrar().register(registrableCommandModel.register(), registrableCommandModel.alias());
+        commands.register(registrableCommandModel.register(), registrableCommandModel.alias());
       }
     });
   }
