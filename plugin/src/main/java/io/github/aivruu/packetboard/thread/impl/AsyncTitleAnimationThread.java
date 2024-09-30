@@ -42,7 +42,6 @@ public class AsyncTitleAnimationThread extends CustomThreadExecutorModel {
       return;
     }
     for (final var cachedBoardModel : this.boardRepository.findAllSync()) {
-      // Modify title but don't modify the player's scoreboard-model.
       if (!cachedBoardModel.visible()) continue;
       // Set new scoreboard-title with placeholders-processing.
       cachedBoardModel.titleWithoutMutation(
