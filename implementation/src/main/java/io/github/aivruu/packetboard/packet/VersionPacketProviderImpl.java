@@ -114,6 +114,5 @@ public class VersionPacketProviderImpl implements VersionPacketProviderModel {
     ((CraftPlayer) player).getHandle().connection
       .send(new ClientboundSetObjectivePacket(objective, ClientboundSetObjectivePacket.METHOD_REMOVE));
     this.serverScoreboard.removeObjective(objective);
-    System.out.println("Removed.");
   }
 }
