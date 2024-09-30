@@ -35,7 +35,8 @@ public abstract class CustomThreadExecutorModel implements Runnable, CachableMod
   private final String id;
   protected final RepositoryModel<CachedBoardModel> boardRepository;
   private final ScheduledExecutorService executorService;
-  protected byte index = -1;
+  // Initial index-value for any created custom-thread-executor model.
+  protected byte index = 0;
 
   /**
    * Creates a new {@link CustomThreadExecutorModel} with the given parameters.
@@ -96,7 +97,6 @@ public abstract class CustomThreadExecutorModel implements Runnable, CachableMod
       this.executorService.shutdownNow();
       return ThreadShutdownStatusProvider.withShutdownImmediate();
     } catch (final InterruptedException exception) {
-      exception.printStackTrace();
       return ThreadShutdownStatusProvider.withShutdownFailure();
     }
   }
