@@ -20,7 +20,41 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 @ConfigSerializable
 public class MessagesConfigModel {
-  public String permission = "<blue>[PacketBoard] <red>You don't have permission to do that!";
+  public String[] scoreboardControlUsage = {
+    "<blue>[PacketBoard] <gradient:yellow:green>Scoreboard's Control Commands:",
+    "<gradient:yellow:green>- /scoreboard toggle | Turn On/Off your scoreboard.",
+    "<gradient:yellow:green>- /scoreboard title <text> | Modify your scoreboard's title.",
+    "<gradient:yellow:green>- /scoreboard line <line> <text> | Modify your scoreboard's specified-line.",
+    "<gradient:yellow:green>- /scoreboard remove <line> | Remove the specified-line from your scoreboard.",
+  };
 
-  public String scoreboardCreationFailed = "<blue>[PacketBoard] <red>Failed to create your scoreboard!";
+  public String[] help = {
+    "<blue>[PacketBoard] <gradient:yellow:green>Scoreboard's Control Commands:",
+    "<gradient:yellow:green>- /packetboard help | Display the help message.",
+    "<gradient:yellow:green>- /packetboard reload | Reload the plugin's configurations and threads' attributes.",
+    "",
+    "<gradient:gray:aqua><hover:show_text:'Click to execute the command.'><click:run_command:'/scoreboard'>-> Check usage-guide for the scoreboard's own commands.</click></hover>",
+  };
+
+  public String reloadSuccess = "<blue>[PacketBoard] <green>The plugin have been fully-reloaded correctly!";
+
+  public String reloadFailedDueToExecutors = "<blue>[PacketBoard] <red>Something went wrong with reload during plugin's thread-executors processing.";
+
+  public String reloadFailedDueToConfiguration = "<blue>[PacketBoard] <red>Something went wrong with reload during plugin's configuration processing.";
+
+  public String scoreboardTurnedOn = "<blue>[PacketBoard] <gradient:yellow:green>The scoreboard has been turned-on!";
+
+  public String scoreboardTurnedOff = "<blue>[PacketBoard] <gradient:yellow:red>The scoreboard has been turned-off!";
+
+  public String scoreboardTitleControlDisabled = "<blue>[PacketBoard] <red>The scoreboard's title-control is disabled due to title-animation.";
+
+  public String scoreboardTitleModified = "<blue>[PacketBoard] <gradient:aqua:yellow>The scoreboard's title has been modified to <title>!";
+
+  public String scoreboardLineModified = "<blue>[PacketBoard] <gradient:aqua:yellow>The scoreboard's line <line> has been modified!";
+
+  public String scoreboardLineUnmodified = "<blue>[PacketBoard] <red>The line couldn't be modified, check and validate the line-number you gave!";
+
+  public String scoreboardLineRemoved = "<blue>[PacketBoard] <gradient:yellow:red>The line has been removed from the scoreboard!";
+
+  public String scoreboardLineDeletionFailed = "<blue>[PacketBoard] <red>Failed to remove the line from the scoreboard!";
 }
