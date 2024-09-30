@@ -17,6 +17,7 @@
 package io.github.aivruu.packetboard.thread.impl;
 
 import io.github.aivruu.packetboard.board.CachedBoardModel;
+import io.github.aivruu.packetboard.placeholder.PlaceholderParsingUtils;
 import io.github.aivruu.packetboard.repository.RepositoryModel;
 import io.github.aivruu.packetboard.thread.CustomThreadConstants;
 import io.github.aivruu.packetboard.thread.CustomThreadExecutorModel;
@@ -41,9 +42,11 @@ public class AsyncTitleAnimationThread extends CustomThreadExecutorModel {
       return;
     }
     for (final var cachedBoardModel : this.boardRepository.findAllSync()) {
+      // Modify title but don't modify the player's scoreboard-model.
       if (!cachedBoardModel.visible()) continue;
-      // Don't update title for toggled-off scoreboards.
-      cachedBoardModel.titleWithoutUpdate(this.content[this.index]);
+      // Set new scoreboard-title with placeholders-processing.
+      cachedBoardModel.titleWithoutMutation(
+        PlaceholderParsingUtils.parse(cachedBoardModel.player(), this.content[this.index]));
     }
   }
 }
