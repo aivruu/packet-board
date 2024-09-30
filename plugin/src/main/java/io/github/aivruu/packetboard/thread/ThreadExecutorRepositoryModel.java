@@ -17,6 +17,7 @@
 package io.github.aivruu.packetboard.thread;
 
 import io.github.aivruu.packetboard.repository.RepositoryModel;
+import io.github.aivruu.packetboard.thread.status.ThreadShutdownStatusProvider;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.jetbrains.annotations.Nullable;
 
@@ -55,31 +56,35 @@ public class ThreadExecutorRepositoryModel implements RepositoryModel<CustomThre
 
   @Override
   public void updateSync(final CustomThreadExecutorModel model) {
-    final var id = model.id();
-    this.threadExecutors.remove(id);
-    this.threadExecutors.put(id, model);
+    throw new UnsupportedOperationException("CustomThreadExecutorModel's are mutable and don't require this update-type.");
   }
 
   @Override
   public boolean deleteSync(final String id) {
-    final var customThreadExecutorModel = this.threadExecutors.get(id);
-    // If thread-executor is cached, at shutdown, the status-provider must return the 'SHUTDOWN_SUCCESS' status.
-    return (customThreadExecutorModel != null) && customThreadExecutorModel.shutdown().shutdownSuccess();
+    final var customThreadExecutorModel = this.threadExecutors.remove(id);
+    if (customThreadExecutorModel == null) {
+      return false;
+    }
+    final var shutdownStatusProvider = customThreadExecutorModel.shutdown();
+    this.processExecutorGivenShutdownStatus(id, shutdownStatusProvider);
+    // At shutdown, the status-provider must return the 'SHUTDOWN_SUCCESS' status.
+    return shutdownStatusProvider.shutdownSuccess();
+  }
+
+  public void processExecutorGivenShutdownStatus(final String id, final ThreadShutdownStatusProvider threadShutdownStatusProvider) {
+    if (threadShutdownStatusProvider.shutdownSuccess()) {
+      this.logger.info("{} has been successfully shutdown.", id);
+    } else if (threadShutdownStatusProvider.shutdownImmediate()) {
+      this.logger.warn("{} couldn't terminate before time-out.", id);
+    } else {
+      this.logger.error("{} couldn't be shutdown correctly.", id);
+    }
   }
 
   @Override
   public void clearRegistry() {
     for (final var customThreadExecutorModel : this.threadExecutors.values()) {
-      final var threadExecutorShutdownStatus = customThreadExecutorModel.shutdown();
-      final var threadExecutorId = customThreadExecutorModel.id();
-      // Simply verification to notify about thread-executors' shutdown status.
-      if (threadExecutorShutdownStatus.shutdownSuccess()) {
-        this.logger.info("{} has been successfully shutdown.", threadExecutorId);
-      } else if (threadExecutorShutdownStatus.shutdownImmediate()) {
-        this.logger.warn("{} couldn't terminate before time-out.", threadExecutorId);
-      } else {
-        this.logger.error("{} couldn't be shutdown correctly.", threadExecutorId);
-      }
+      this.processExecutorGivenShutdownStatus(customThreadExecutorModel.id(), customThreadExecutorModel.shutdown());
     }
     this.threadExecutors.clear();
   }
