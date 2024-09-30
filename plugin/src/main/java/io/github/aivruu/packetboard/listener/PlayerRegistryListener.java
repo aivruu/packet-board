@@ -30,19 +30,23 @@ public class PlayerRegistryListener implements Listener {
   private final ComponentLogger logger;
   private final BoardManager boardManager;
   private final ScoreboardFactory scoreboardFactory;
-  private final ConfigurationProvider<SettingsConfigModel> settingsConfigProvider;
+  private SettingsConfigModel configModel;
 
   public PlayerRegistryListener(final ComponentLogger logger, final BoardManager boardManager,
-                                final ScoreboardFactory scoreboardFactory, final ConfigurationProvider<SettingsConfigModel> settingsConfigProvider) {
+                                final ScoreboardFactory scoreboardFactory, final SettingsConfigModel configModel) {
     this.logger = logger;
     this.boardManager = boardManager;
     this.scoreboardFactory = scoreboardFactory;
-    this.settingsConfigProvider = settingsConfigProvider;
+    this.configModel = configModel;
+  }
+
+  public void configModel(final SettingsConfigModel updatedConfigModel) {
+    this.configModel = updatedConfigModel;
   }
 
   @EventHandler
   public void onJoin(final PlayerJoinEvent event) {
-    this.scoreboardFactory.create(event.getPlayer(), this.settingsConfigProvider.configModel().mode);
+    this.scoreboardFactory.create(event.getPlayer(), this.configModel);
   }
 
   @EventHandler
