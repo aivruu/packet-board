@@ -38,9 +38,7 @@ public class MessagesConfigModel {
 
   public String reloadSuccess = "<blue>[PacketBoard] <green>The plugin have been fully-reloaded correctly!";
 
-  public String reloadFailedDueToExecutors = "<blue>[PacketBoard] <red>Something went wrong with reload during plugin's thread-executors processing.";
-
-  public String reloadFailedDueToConfiguration = "<blue>[PacketBoard] <red>Something went wrong with reload during plugin's configuration processing.";
+  public String reloadFailed = "<blue>[PacketBoard] <red>The configuration-files couldn't reloaded!";
 
   public String scoreboardTurnedOn = "<blue>[PacketBoard] <gradient:yellow:green>The scoreboard has been turned-on!";
 
