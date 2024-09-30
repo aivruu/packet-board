@@ -14,20 +14,23 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-package io.github.aivruu.packetboard.thread.impl;
+package io.github.aivruu.packetboard.task;
 
 import io.github.aivruu.packetboard.board.CachedBoardModel;
-import io.github.aivruu.packetboard.placeholder.PlaceholderParsingUtils;
+import io.github.aivruu.packetboard.util.PlaceholderParsingUtils;
 import io.github.aivruu.packetboard.repository.RepositoryModel;
-import io.github.aivruu.packetboard.thread.CustomThreadConstants;
-import io.github.aivruu.packetboard.thread.CustomThreadExecutorModel;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import net.kyori.adventure.text.Component;
 
-public class AsyncTitleAnimationThread extends CustomThreadExecutorModel {
-  private Component[] content;
+import java.util.function.Consumer;
 
-  public AsyncTitleAnimationThread(final RepositoryModel<CachedBoardModel> boardRepository, final Component[] content) {
-    super("scoreboard-title-animation-thread", boardRepository, CustomThreadConstants.THREAD_POOL_EXECUTOR);
+public class TitleAnimationPluginTask implements Consumer<ScheduledTask> {
+  private final RepositoryModel<CachedBoardModel> boardRepository;
+  private Component[] content;
+  private byte index = 0;
+
+  public TitleAnimationPluginTask(final RepositoryModel<CachedBoardModel> boardRepository, final Component[] content) {
+    this.boardRepository = boardRepository;
     this.content = content;
   }
 
@@ -36,7 +39,7 @@ public class AsyncTitleAnimationThread extends CustomThreadExecutorModel {
   }
 
   @Override
-  public void run() {
+  public void accept(final ScheduledTask task) {
     // Avoid on-runtime errors due to out of range for content-array index.
     if (this.index++ >= (this.content.length - 1)) {
       return;
