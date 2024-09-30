@@ -31,13 +31,12 @@ public class SettingsConfigModel {
   @Comment("This mean that the scoreboard's lines will be be updated every 'x' ticks-amount, or not.")
   public boolean enableLinesRefreshing = true;
 
-  @Comment("The refreshing-rate for the scoreboard's animated-title.")
-  public byte animatedTitleUpdateRateInTicks = 1;
+  @Comment("The refreshing-rate in seconds, for the scoreboard's animated-title.")
+  public byte animatedTitleUpdateRateSeconds = 1;
 
   @Comment("""
-    The refreshing-rate for the scoreboard's lines.
-    As guide, 20 ticks -> 1 second.""")
-  public byte linesUpdateRateInTicks = 20;
+    The refreshing-rate for the scoreboard's lines, in seconds.""")
+  public byte linesUpdateRateSeconds = 1;
 
   @Comment("""
     The mode that will run the plugin's scoreboards during runtime.
@@ -55,12 +54,12 @@ public class SettingsConfigModel {
     The title that will be displayed in the animated-title feature.
     This will be displayed in the 'GLOBAL' mode only.""")
   public Component[] animatedTitleContent = {
-    Component.text("<aqua>A"),
-    Component.text("<green>A"),
-    Component.text("<yellow>A"),
-    Component.text("<red>A"),
-    Component.text("<dark_aqua>A"),
-    Component.text("<gray>A")
+    Component.text("<aqua>PacketBoard"),
+    Component.text("<green>PacketBoard"),
+    Component.text("<yellow>PacketBoard"),
+    Component.text("<red>PacketBoard"),
+    Component.text("<dark_aqua>PacketBoard"),
+    Component.text("<gray>PacketBoard")
   };
 
   @Comment("""
@@ -101,7 +100,7 @@ public class SettingsConfigModel {
     public String designedWorld = "spawn1";
 
     @Comment("The title for this world's scoreboard.")
-    public String title = "<gradient:blue:dark_aqua><b>PACKETBOARD | SPAWN";
+    public String title = "<gradient:blue:dark_gray>PacketBoard (Spawn)";
 
     @Comment("The lines for this world's scoreboard.")
     public Component[] lines = {
@@ -118,7 +117,7 @@ public class SettingsConfigModel {
     public String node = "staffmode.permission";
 
     @Comment("The title for this permission's scoreboard.")
-    public String title = "<gradient:blue:red><b>PACKETBOARD | STAFF";
+    public String title = "<gradient:blue:red>PacketBoard | Staff";
 
     @Comment("The lines for this permission's scoreboard.")
     public Component[] lines = {
@@ -135,7 +134,7 @@ public class SettingsConfigModel {
     public String designedGroup = "dev";
 
     @Comment("The scoreboard-title for this group, or groups.")
-    public String title = "<gradient:blue:green><b>PACKETBOARD | EXCLUSIVE";
+    public String title = "<gradient:blue:yellow>PacketBoard | TPS %server_tps%";
 
     @Comment("The scoreboard-lines for this group, or groups.")
     public Component[] lines = {
