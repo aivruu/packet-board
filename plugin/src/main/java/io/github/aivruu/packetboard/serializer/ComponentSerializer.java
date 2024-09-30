@@ -14,8 +14,9 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-package io.github.aivruu.packetboard.component;
+package io.github.aivruu.packetboard.serializer;
 
+import io.github.aivruu.packetboard.util.ComponentParserUtils;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.configurate.ConfigurationNode;
