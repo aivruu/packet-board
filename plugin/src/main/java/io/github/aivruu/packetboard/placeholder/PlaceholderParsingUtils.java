@@ -25,7 +25,6 @@ import org.bukkit.entity.Player;
 public class PlaceholderParsingUtils {
   /** Used for from Legacy to Component parsing for PlaceholderAPI it's placeholders with legacy-chars support. */
   private static final LegacyComponentSerializer LEGACY_COMPONENT_SERIALIZER = LegacyComponentSerializer.legacyAmpersand();
-  /** Indicate whether PlaceholderAPI is installed and enabled. */
   private static final boolean PLACEHOLDER_API_AVAILABLE;
 
   static {
