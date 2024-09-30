@@ -16,7 +16,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 package io.github.aivruu.packetboard.listener;
 
-import io.github.aivruu.packetboard.config.ConfigurationProvider;
 import io.github.aivruu.packetboard.config.object.SettingsConfigModel;
 import io.github.aivruu.packetboard.factory.ScoreboardFactory;
 import io.github.aivruu.packetboard.manager.BoardManager;
