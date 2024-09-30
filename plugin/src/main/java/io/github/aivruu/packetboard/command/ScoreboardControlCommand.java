@@ -53,7 +53,8 @@ public class ScoreboardControlCommand implements RegistrableCommandModel {
   @SuppressWarnings("UnstableApiUsage")
   public LiteralCommandNode<CommandSourceStack> register() {
     return Commands.literal("scoreboard")
-      .requires(sender -> sender instanceof Player && ((Player) sender).hasPermission("packetboard.command.scoreboard"))
+      .requires(sender ->
+        sender instanceof final Player player && player.hasPermission("packetboard.command.scoreboard"))
       .executes(commandContext -> {
         commandContext.getSource()
           .getSender()
