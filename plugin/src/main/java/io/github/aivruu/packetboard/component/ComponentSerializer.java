@@ -31,15 +31,6 @@ public enum ComponentSerializer implements TypeSerializer<Component> {
 
   @Override
   public Component deserialize(final Type type, final ConfigurationNode target) {
-    try {
-      final var component = target.get(Component.class);
-      if (component != null) {
-        final var toLegacyText = ComponentParserUtils.PLAIN_TEXT_COMPONENT_SERIALIZER.serialize(component);
-        return ComponentParserUtils.apply(toLegacyText);
-      }
-    } catch (final SerializationException exception) {
-      exception.printStackTrace();
-    }
     return (target.getString() == null) ? EMPTY_COMPONENT : ComponentParserUtils.apply(target.getString());
   }
 
