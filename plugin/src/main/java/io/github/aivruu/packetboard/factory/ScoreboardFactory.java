@@ -16,9 +16,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 package io.github.aivruu.packetboard.factory;
 
-import io.github.aivruu.packetboard.board.RuntimeScoreboardMode;
 import io.github.aivruu.packetboard.component.ComponentParserUtils;
-import io.github.aivruu.packetboard.config.ConfigurationProvider;
 import io.github.aivruu.packetboard.config.object.SettingsConfigModel;
 import io.github.aivruu.packetboard.manager.BoardManager;
 import net.luckperms.api.model.user.UserManager;
@@ -27,19 +25,15 @@ import org.bukkit.entity.Player;
 
 public class ScoreboardFactory {
   private final BoardManager boardManager;
-  private final ConfigurationProvider<SettingsConfigModel> settingsConfigProvider;
   private final UserManager luckPermsUserManager;
 
-  public ScoreboardFactory(final BoardManager boardManager, final ConfigurationProvider<SettingsConfigModel> settingsConfigProvider,
-                           final UserManager luckPermsUserManager) {
+  public ScoreboardFactory(final BoardManager boardManager, final UserManager luckPermsUserManager) {
     this.boardManager = boardManager;
-    this.settingsConfigProvider = settingsConfigProvider;
     this.luckPermsUserManager = luckPermsUserManager;
   }
 
-  public void create(final Player player, final RuntimeScoreboardMode mode) {
-    final var config = this.settingsConfigProvider.configModel();
-    switch (mode) {
+  public void create(final Player player, final SettingsConfigModel config) {
+    switch (config.mode) {
       case GLOBAL -> {
         if (config.enableAnimatedTitleFeature) {
           this.boardManager.create(player, config.animatedTitleContent[0], config.globalLines);
@@ -49,38 +43,38 @@ public class ScoreboardFactory {
       }
       // The title-animation doesn't consider specific modes. so we avoid bugs with the title.
       case WORLD -> {
-        if (!config.enableAnimatedTitleFeature) this.fromWorldSections(player);
+        if (!config.enableAnimatedTitleFeature) this.fromWorldSections(config, player);
       }
       case PERMISSION -> {
-        if (!config.enableAnimatedTitleFeature) this.fromPermissionSections(player);
+        if (!config.enableAnimatedTitleFeature) this.fromPermissionSections(config, player);
       }
       case GROUP -> {
-        if (!config.enableAnimatedTitleFeature) this.fromGroupSections(player);
+        if (!config.enableAnimatedTitleFeature) this.fromGroupSections(config, player);
       }
     };
   }
 
-  private void fromWorldSections(final Player player) {
-    for (final var worldSection : this.settingsConfigProvider.configModel().scoreboardWorld) {
+  private void fromWorldSections(final SettingsConfigModel config, final Player player) {
+    for (final var worldSection : config.scoreboardWorld) {
       if (!player.getWorld().getName().equals(worldSection.designedWorld)) continue;
       // Create scoreboard using this world-section's title and defined content.
       this.boardManager.create(player, ComponentParserUtils.apply(worldSection.title), worldSection.lines);
     }
   }
 
-  private void fromPermissionSections(final Player player) {
-    for (final var permissionSection : this.settingsConfigProvider.configModel().scoreboardPermission) {
+  private void fromPermissionSections(final SettingsConfigModel config, final Player player) {
+    for (final var permissionSection : config.scoreboardPermission) {
       if (!player.hasPermission(permissionSection.node)) continue;
       this.boardManager.create(player, ComponentParserUtils.apply(permissionSection.title), permissionSection.lines);
     }
   }
 
-  private void fromGroupSections(final Player player) {
+  private void fromGroupSections(final SettingsConfigModel config, final Player player) {
     // This mode requires LuckPerms available for groups settings.
     if (Bukkit.getPluginManager().getPlugin("LuckPerms") == null) {
       return;
     }
-    for (final var groupSection : this.settingsConfigProvider.configModel().scoreboardGroup) {
+    for (final var groupSection : config.scoreboardGroup) {
       final var luckPermsUser = this.luckPermsUserManager.getUser(player.getUniqueId());
       // Check if player's user information is available, and its group can see this scoreboard.
       if ((luckPermsUser == null) || !luckPermsUser.getPrimaryGroup().equals(groupSection.designedGroup)) {
