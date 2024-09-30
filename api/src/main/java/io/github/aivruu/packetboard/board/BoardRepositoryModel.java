@@ -52,7 +52,7 @@ public class BoardRepositoryModel implements RepositoryModel<CachedBoardModel> {
     final var id = model.id();
     // No matter if the model exists or not, we will replace it of either way.
     this.scoreboards.remove(id);
-    this.scoreboards.put(id, model);
+    this.scoreboards.putIfAbsent(id, model);
   }
 
   @Override
