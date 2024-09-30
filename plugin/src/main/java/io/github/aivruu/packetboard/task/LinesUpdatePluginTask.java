@@ -14,22 +14,26 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-package io.github.aivruu.packetboard.thread.impl;
+package io.github.aivruu.packetboard.task;
 
 import io.github.aivruu.packetboard.board.CachedBoardModel;
 import io.github.aivruu.packetboard.config.object.SettingsConfigModel;
-import io.github.aivruu.packetboard.placeholder.PlaceholderParsingUtils;
+import io.github.aivruu.packetboard.util.PlaceholderParsingUtils;
 import io.github.aivruu.packetboard.repository.RepositoryModel;
-import io.github.aivruu.packetboard.thread.CustomThreadConstants;
-import io.github.aivruu.packetboard.thread.CustomThreadExecutorModel;
+import io.github.aivruu.packetboard.factory.ScoreboardFactory;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
-public class AsyncLinesUpdateThread extends CustomThreadExecutorModel {
-  private SettingsConfigModel config;
+import java.util.function.Consumer;
 
-  public AsyncLinesUpdateThread(final RepositoryModel<CachedBoardModel> boardRepository, final SettingsConfigModel config) {
-    super("scoreboard-lines-updater-thread", boardRepository, CustomThreadConstants.THREAD_POOL_EXECUTOR);
+public class LinesUpdatePluginTask implements Consumer<ScheduledTask> {
+  private final RepositoryModel<CachedBoardModel> boardRepository;
+  private SettingsConfigModel config;
+  private byte index = 0;
+
+  public LinesUpdatePluginTask(final RepositoryModel<CachedBoardModel> boardRepository, final SettingsConfigModel config) {
+    this.boardRepository = boardRepository;
     this.config = config;
   }
 
@@ -38,48 +42,46 @@ public class AsyncLinesUpdateThread extends CustomThreadExecutorModel {
   }
 
   @Override
-  public void run() {
+  public void accept(final ScheduledTask task) {
     for (final var cachedBoardModel : this.boardRepository.findAllSync()) {
       if (!cachedBoardModel.visible()) continue;
       // Internal lines processing depending on selected scoreboard-mode.
-      this.processIteratedBoard(this.config, this.index, cachedBoardModel);
+      this.processIteratedBoard(this.config, cachedBoardModel);
     }
   }
 
-  private byte validateIndexValue(byte index, int limit) {
-    if (index++ >= (limit - 1)) index = 0;
-    return index;
+  private void validateIndexValue(final int limit) {
+    this.index = (this.index++ >= (limit - 1)) ? 0 : this.index;
   }
 
-  private void processIteratedBoard(final SettingsConfigModel config, final byte index, final CachedBoardModel cachedBoardModel) {
+  private void processIteratedBoard(final SettingsConfigModel config, final CachedBoardModel cachedBoardModel) {
     final var player = cachedBoardModel.player();
     switch (config.mode) {
-      case GLOBAL -> cachedBoardModel.line(index, this.process(player, config.globalLines, index));
+      case GLOBAL -> cachedBoardModel.lineWithoutMutation(this.index, this.process(player, config.globalLines));
       case WORLD -> {
         for (final var worldSection : config.scoreboardWorld) {
           if (!player.getWorld().getName().equals(worldSection.designedWorld)) continue;
-          cachedBoardModel.lineWithoutMutation(index, this.process(player, worldSection.lines, index));
+          cachedBoardModel.lineWithoutMutation(this.index, this.process(player, worldSection.lines));
         }
       }
       case PERMISSION -> {
         for (final var permissionSection : config.scoreboardPermission) {
           if (!player.hasPermission(permissionSection.node)) continue;
-          cachedBoardModel.lineWithoutMutation(index, this.process(player, permissionSection.lines, index));
+          cachedBoardModel.lineWithoutMutation(this.index, this.process(player, permissionSection.lines));
         }
       }
       case GROUP -> {
         for (final var groupSection : config.scoreboardGroup) {
-          // Group validation logic.
-          cachedBoardModel.lineWithoutMutation(index, this.process(player, groupSection.lines, index));
+          cachedBoardModel.lineWithoutMutation(this.index, this.process(player, groupSection.lines));
         }
       }
     }
   }
 
-  private Component process(final Player player, final Component[] lines, final byte index) {
+  private Component process(final Player player, Component[] lines) {
     // Current given index validation for each line of the array.
-    final var validatedLineIndex = this.validateIndexValue(index, lines.length);
+    this.validateIndexValue(lines.length);
     // Return component with placeholders-parsing.
-    return PlaceholderParsingUtils.parse(player, lines[validatedLineIndex]);
+    return PlaceholderParsingUtils.parse(player, lines[this.index]);
   }
 }
