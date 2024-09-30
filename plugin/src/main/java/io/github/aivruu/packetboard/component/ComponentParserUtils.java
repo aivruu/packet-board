@@ -23,8 +23,8 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 public class ComponentParserUtils {
   private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
-  private static final PlainTextComponentSerializer PLAIN_TEXT_COMPONENT_SERIALIZER = PlainTextComponentSerializer.plainText();
-
+  public static final PlainTextComponentSerializer PLAIN_TEXT_COMPONENT_SERIALIZER
+    = PlainTextComponentSerializer.plainText();
   public static Component apply(final String text, final TagResolver... placeholders) {
     return MINI_MESSAGE.deserialize(text, placeholders);
   }
@@ -32,7 +32,7 @@ public class ComponentParserUtils {
   public static Component apply(final String[] textContent, final TagResolver... placeholders) {
     final var componentBuilder = Component.text();
     for (final var iterated : textContent) {
-      componentBuilder.append(MINI_MESSAGE.deserialize(iterated, placeholders));
+      componentBuilder.append(MINI_MESSAGE.deserialize(iterated, placeholders)).append(Component.newline());
     }
     return componentBuilder.build();
   }
