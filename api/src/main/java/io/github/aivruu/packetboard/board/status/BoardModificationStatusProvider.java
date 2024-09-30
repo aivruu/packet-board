@@ -17,13 +17,14 @@
 package io.github.aivruu.packetboard.board.status;
 
 import io.github.aivruu.packetboard.board.CachedBoardModel;
+import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.Nullable;
 
 /**
  * This record is used as status-provider for {@link CachedBoardModel} any possible operations.
  *
  * @param status the status-code for this instance.
- * @param result the result, a {@link CachedBoardModel} instance for this provider-instance.
+ * @param result the result, a {@link CachedBoardModel} instance for this provider-instance, or {@code null}.
  * @since 1.0.0
  */
 public record BoardModificationStatusProvider(byte status, @Nullable CachedBoardModel result) {
@@ -93,49 +94,65 @@ public record BoardModificationStatusProvider(byte status, @Nullable CachedBoard
   /**
    * Creates a new {@link BoardModificationStatusProvider} with the {@link #TURNED_OFF_STATUS}.
    *
-   * @param result the new {@link CachedBoardModel} instance for the operation.
+   * @param id the turned-off scoreboard's owner's id.
+   * @param objectiveId the turned-off scoreboard's objective id.
+   * @param title the scoreboard's title.
+   * @param lines the scoreboard's lines.
    * @return The {@link BoardModificationStatusProvider} with the {@link #TURNED_OFF_STATUS}, and a new
    *     modified {@link CachedBoardModel}.
    * @since 1.0.0
    */
-  public static BoardModificationStatusProvider withTurnOff(final CachedBoardModel result) {
-    return new BoardModificationStatusProvider(TURNED_OFF_STATUS, result);
+  public static BoardModificationStatusProvider withTurnOff(final String id, final String objectiveId, final Component title,
+                                                            final Component[] lines) {
+    return new BoardModificationStatusProvider(TURNED_OFF_STATUS, new CachedBoardModel(id, objectiveId, title, lines, false));
   }
 
   /**
    * Creates a new {@link BoardModificationStatusProvider} with the {@link #TURNED_ON_STATUS}.
    *
-   * @param result the new {@link CachedBoardModel} instance for the operation.
+   * @param id the turned-on scoreboard's owner's id.
+   * @param objectiveId the turned-on scoreboard's objective id.
+   * @param title the scoreboard's title.
+   * @param lines the scoreboard's lines.
    * @return The {@link BoardModificationStatusProvider} with the {@link #TURNED_ON_STATUS}, and a new
    *     modified {@link CachedBoardModel}.
    * @since 1.0.0
    */
-  public static BoardModificationStatusProvider withTurnOn(final CachedBoardModel result) {
-    return new BoardModificationStatusProvider(TURNED_ON_STATUS, result);
+  public static BoardModificationStatusProvider withTurnOn(final String id, final String objectiveId, final Component title,
+                                                           final Component[] lines) {
+    return new BoardModificationStatusProvider(TURNED_ON_STATUS, new CachedBoardModel(id, objectiveId, title, lines, true));
   }
 
   /**
    * Creates a new {@link BoardModificationStatusProvider} with the {@link #MODIFIED_TITLE_STATUS}.
    *
-   * @param result the new {@link CachedBoardModel} instance for the operation.
+   * @param id the modified scoreboard's owner's id.
+   * @param objectiveId the modified scoreboard's objective id.
+   * @param newTitle the new scoreboard's title.
+   * @param lines the scoreboard's lines.
    * @return The {@link BoardModificationStatusProvider} with the {@link #MODIFIED_TITLE_STATUS}, and a new
    *     modified {@link CachedBoardModel}.
    * @since 1.0.0
    */
-  public static BoardModificationStatusProvider withModifiedTitle(final CachedBoardModel result) {
-    return new BoardModificationStatusProvider(MODIFIED_TITLE_STATUS, result);
+  public static BoardModificationStatusProvider withModifiedTitle(final String id, final String objectiveId, final Component newTitle,
+                                                                  final Component[] lines) {
+    return new BoardModificationStatusProvider(MODIFIED_TITLE_STATUS, new CachedBoardModel(id, objectiveId, newTitle, lines, true));
   }
 
   /**
    * Creates a new {@link BoardModificationStatusProvider} with the {@link #MODIFIED_LINES_STATUS}.
    *
-   * @param result the new {@link CachedBoardModel} instance for the operation.
+   * @param id the modified scoreboard's owner's id.
+   * @param objectiveId the modified scoreboard's objective id.
+   * @param title the scoreboard's title.
+   * @param newLines the new scoreboard's lines.
    * @return The {@link BoardModificationStatusProvider} with the {@link #MODIFIED_LINES_STATUS}, and a new
    *     modified {@link CachedBoardModel}.
    * @since 1.0.0
    */
-  public static BoardModificationStatusProvider withModifiedLines(final CachedBoardModel result) {
-    return new BoardModificationStatusProvider(MODIFIED_LINES_STATUS, result);
+  public static BoardModificationStatusProvider withModifiedLines(final String id, final String objectiveId, final Component title,
+                                                                  final Component[] newLines) {
+    return new BoardModificationStatusProvider(MODIFIED_LINES_STATUS, new CachedBoardModel(id, objectiveId, title, newLines, true));
   }
 
   /**
