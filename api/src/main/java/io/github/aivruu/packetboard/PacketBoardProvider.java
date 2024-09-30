@@ -16,13 +16,15 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 package io.github.aivruu.packetboard;
 
+import org.jetbrains.annotations.Nullable;
+
 /**
  * This class is used as {@link PacketBoard} API instances provider.
  *
  * @since 1.0.0
  */
 public class PacketBoardProvider {
-  private static PacketBoard instance;
+  private static @Nullable PacketBoard instance;
 
   /**
    * Returns the current {@link PacketBoard} instance.
