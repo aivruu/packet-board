@@ -79,8 +79,7 @@ public class BoardManager {
       SCOREBOARD_OBJECTIVE_BASE_FORMAT.formatted(RANDOM.nextInt()), title, lines, true);
     final var boardCreateEvent = new BoardCreateEvent(player, cachedBoardModel);
     Bukkit.getPluginManager().callEvent(boardCreateEvent);
-    // First check if the event is cancelled, then check if the board-model has an error to
-    // show it to the player.
+    // Check additionally if the scoreboard could be shown to the player.
     if (boardCreateEvent.isCancelled() || cachedBoardModel.show().error()) {
       return false;
     }
@@ -151,11 +150,11 @@ public class BoardManager {
     if ((cachedBoardModel == null) || !cachedBoardModel.visible()) {
       return false;
     }
-    Bukkit.getPluginManager().callEvent(new BoardLinesModificationEvent(player, lines));
     final var linesModificationStatus = cachedBoardModel.lines(lines);
     if (linesModificationStatus.error()) {
       return false;
     }
+    Bukkit.getPluginManager().callEvent(new BoardLinesModificationEvent(player, lines));
     this.boardRepository.updateSync(linesModificationStatus.result());
     return true;
   }
@@ -178,13 +177,13 @@ public class BoardManager {
     if ((cachedBoardModel == null) || !cachedBoardModel.visible()) {
       return false;
     }
-    Bukkit.getPluginManager().callEvent(new BoardSingleLineModificationEvent(player, (byte) line, text));
     final var lineModificationStatus = cachedBoardModel.line(line, text);
     if (lineModificationStatus.error()) {
       return false;
     }
-    final var updatedCachedBoardModel = lineModificationStatus.result();
-    this.boardRepository.updateSync(updatedCachedBoardModel);
+    Bukkit.getPluginManager().callEvent(new BoardSingleLineModificationEvent(player, (byte) line, text));
+    // Update previous board-model with new modified model.
+    this.boardRepository.updateSync(lineModificationStatus.result());
     return true;
   }
 
