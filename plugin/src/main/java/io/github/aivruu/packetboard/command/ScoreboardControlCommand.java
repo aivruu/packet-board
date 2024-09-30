@@ -20,7 +20,7 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import io.github.aivruu.packetboard.component.ComponentParserUtils;
+import io.github.aivruu.packetboard.util.ComponentParserUtils;
 import io.github.aivruu.packetboard.config.ConfigurationProvider;
 import io.github.aivruu.packetboard.config.object.MessagesConfigModel;
 import io.github.aivruu.packetboard.config.object.SettingsConfigModel;
@@ -52,7 +52,7 @@ public class ScoreboardControlCommand implements RegistrableCommandModel {
   @Override
   @SuppressWarnings("UnstableApiUsage")
   public LiteralCommandNode<CommandSourceStack> register() {
-    return Commands.literal("scoreboard")
+    return Commands.literal("board")
       .requires(sender ->
         sender instanceof final Player player && player.hasPermission("packetboard.command.scoreboard"))
       .executes(commandContext -> {
