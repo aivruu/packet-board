@@ -17,11 +17,12 @@
 package io.github.aivruu.packetboard.manager;
 
 import io.github.aivruu.packetboard.board.CachedBoardModel;
-import io.github.aivruu.packetboard.event.BoardCreateEvent;
-import io.github.aivruu.packetboard.event.BoardDeleteEvent;
-import io.github.aivruu.packetboard.event.BoardLinesModificationEvent;
-import io.github.aivruu.packetboard.event.BoardTitleModificationEvent;
-import io.github.aivruu.packetboard.event.BoardToggleEvent;
+import io.github.aivruu.packetboard.event.general.BoardCreateEvent;
+import io.github.aivruu.packetboard.event.general.BoardDeleteEvent;
+import io.github.aivruu.packetboard.event.modify.BoardLinesModificationEvent;
+import io.github.aivruu.packetboard.event.modify.BoardSingleLineModificationEvent;
+import io.github.aivruu.packetboard.event.modify.BoardTitleModificationEvent;
+import io.github.aivruu.packetboard.event.general.BoardToggleEvent;
 import io.github.aivruu.packetboard.board.BoardRepositoryModel;
 import io.github.aivruu.packetboard.repository.RepositoryModel;
 import net.kyori.adventure.text.Component;
@@ -74,22 +75,17 @@ public class BoardManager {
    * @since 1.0.0
    */
   public boolean create(final Player player, final Component title, final Component... lines) {
-    final var board = CachedBoardModel.builder()
-      .id(player.getUniqueId().toString())
-      .objectiveId(SCOREBOARD_OBJECTIVE_BASE_FORMAT.formatted(RANDOM.nextInt()))
-      .title(title)
-      .lines(lines)
-      .visible(true)
-      .build();
-    final var boardCreateEvent = new BoardCreateEvent(player, board);
+    final var cachedBoardModel = new CachedBoardModel(player.getUniqueId().toString(),
+      SCOREBOARD_OBJECTIVE_BASE_FORMAT.formatted(RANDOM.nextInt()), title, lines, true);
+    final var boardCreateEvent = new BoardCreateEvent(player, cachedBoardModel);
     Bukkit.getPluginManager().callEvent(boardCreateEvent);
     // First check if the event is cancelled, then check if the board-model has an error to
     // show it to the player.
-    if (boardCreateEvent.isCancelled() || board.show().error()) {
+    if (boardCreateEvent.isCancelled() || cachedBoardModel.show().error()) {
       return false;
     }
     // Board-model in-cache saving.
-    this.boardRepository.saveSync(board);
+    this.boardRepository.saveSync(cachedBoardModel);
     return true;
   }
 
@@ -103,8 +99,7 @@ public class BoardManager {
    * @since 1.0.0
    */
   public boolean delete(final Player player) {
-    final var boardDeleteEvent = new BoardDeleteEvent(player);
-    Bukkit.getPluginManager().callEvent(boardDeleteEvent);
+    Bukkit.getPluginManager().callEvent(new BoardDeleteEvent(player));
     // Board deleting for player, and from repository's cache.
     // Ignore provided status for deletion operation, the model must be removed from cache.
     return this.boardRepository.deleteSync(player.getUniqueId().toString());
@@ -121,16 +116,16 @@ public class BoardManager {
    * @since 1.0.0
    */
   public boolean toggle(final Player player) {
-    final var board = this.boardRepository.findSync(player.getUniqueId().toString());
-    if (board == null) {
+    final var cachedBoardModel = this.boardRepository.findSync(player.getUniqueId().toString());
+    if (cachedBoardModel == null) {
       return false;
     }
-    final var boardToggleEvent = new BoardToggleEvent(player, board.visible());
+    final var boardToggleEvent = new BoardToggleEvent(player, cachedBoardModel.visible());
     Bukkit.getPluginManager().callEvent(boardToggleEvent);
     if (boardToggleEvent.isCancelled()) {
       return false;
     }
-    final var boardToggleStatus = board.toggle();
+    final var boardToggleStatus = cachedBoardModel.toggle();
     if (boardToggleStatus.error()) {
       return false;
     }
@@ -152,16 +147,15 @@ public class BoardManager {
    * @since 1.0.0
    */
   public boolean lines(final Player player, final Component... lines) {
-    final var board = this.boardRepository.findSync(player.getUniqueId().toString());
-    if ((board == null) || !board.visible()) {
+    final var cachedBoardModel = this.boardRepository.findSync(player.getUniqueId().toString());
+    if ((cachedBoardModel == null) || !cachedBoardModel.visible()) {
       return false;
     }
-    final var linesModificationStatus = board.lines(lines);
+    Bukkit.getPluginManager().callEvent(new BoardLinesModificationEvent(player, lines));
+    final var linesModificationStatus = cachedBoardModel.lines(lines);
     if (linesModificationStatus.error()) {
       return false;
     }
-    final var boardLinesModificationEvent = new BoardLinesModificationEvent(player, lines);
-    Bukkit.getPluginManager().callEvent(boardLinesModificationEvent);
     this.boardRepository.updateSync(linesModificationStatus.result());
     return true;
   }
@@ -184,13 +178,12 @@ public class BoardManager {
     if ((cachedBoardModel == null) || !cachedBoardModel.visible()) {
       return false;
     }
+    Bukkit.getPluginManager().callEvent(new BoardSingleLineModificationEvent(player, (byte) line, text));
     final var lineModificationStatus = cachedBoardModel.line(line, text);
     if (lineModificationStatus.error()) {
       return false;
     }
     final var updatedCachedBoardModel = lineModificationStatus.result();
-    final var boardLinesModificationEvent = new BoardLinesModificationEvent(player, updatedCachedBoardModel.lines());
-    Bukkit.getPluginManager().callEvent(boardLinesModificationEvent);
     this.boardRepository.updateSync(updatedCachedBoardModel);
     return true;
   }
@@ -218,8 +211,7 @@ public class BoardManager {
     }
     // At this point it's not null.
     final var modifiedBoard = lineRemovalStatus.result();
-    final var boardLinesModificationEvent = new BoardLinesModificationEvent(player, modifiedBoard.lines());
-    Bukkit.getPluginManager().callEvent(boardLinesModificationEvent);
+    Bukkit.getPluginManager().callEvent(new BoardLinesModificationEvent(player, modifiedBoard.lines()));
     this.boardRepository.updateSync(modifiedBoard);
     return true;
   }
@@ -237,16 +229,15 @@ public class BoardManager {
    * @since 1.0.0
    */
   public boolean title(final Player player, final Component title) {
-    final var board = this.boardRepository.findSync(player.getUniqueId().toString());
-    if ((board == null) || !board.visible()) {
+    final var cachedBoardModel = this.boardRepository.findSync(player.getUniqueId().toString());
+    if ((cachedBoardModel == null) || !cachedBoardModel.visible()) {
       return false;
     }
-    final var titleModificationStatus = board.title(title);
+    final var titleModificationStatus = cachedBoardModel.title(title);
     if (titleModificationStatus.error()) {
       return false;
     }
-    final var boardTitleModificationEvent = new BoardTitleModificationEvent(player, title);
-    Bukkit.getPluginManager().callEvent(boardTitleModificationEvent);
+    Bukkit.getPluginManager().callEvent(new BoardTitleModificationEvent(player, title));
     this.boardRepository.updateSync(titleModificationStatus.result());
     return true;
   }
@@ -260,7 +251,6 @@ public class BoardManager {
   public void close() {
     // Deleting all visible, and turned-on scoreboards before models deletion.
     for (final var cachedBoardModel : this.boardRepository.findAllSync()) {
-      // If the scoreboard already was deleted for the player, continue with the next iteration.
       if (!cachedBoardModel.visible()) continue;
       // Ignore provided status for deletion operation, only delete it.
       cachedBoardModel.delete();
