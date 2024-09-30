@@ -8,11 +8,13 @@ paperweight = "1.7.2"
 paper = "1.21.1-R0.1-SNAPSHOT"
 configurate = "4.1.2"
 placeholderapi = "2.11.6"
+luckperms = "5.4"
 
 [libraries]
 paper = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
 configurate = { module = "org.spongepowered:configurate-hocon", version.ref = "configurate" }
 placeholderapi = { group = "me.clip", name = "placeholderapi", version.ref = "placeholderapi" }
+luckperms = { group = "net.luckperms", name = "api", version.ref = "luckperms" }
 
 [plugins]
 shadow = { id = "io.github.goooler.shadow", version.ref = "shadow" }

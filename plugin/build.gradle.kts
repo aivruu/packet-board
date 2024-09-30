@@ -13,4 +13,5 @@ dependencies {
   compileOnly(libs.paper)
   compileOnly(libs.configurate)
   compileOnly(libs.placeholderapi)
+  compileOnly(libs.luckperms)
 }

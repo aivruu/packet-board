@@ -5,3 +5,9 @@ authors: [ aivruu ]
 
 api-version: "1.20"
 version: ${version}
+
+dependencies:
+  server:
+    LuckPerms:
+      load: BEFORE
+      required: false
