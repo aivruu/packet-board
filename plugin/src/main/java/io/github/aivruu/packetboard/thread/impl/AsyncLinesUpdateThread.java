@@ -19,9 +19,12 @@ package io.github.aivruu.packetboard.thread.impl;
 import io.github.aivruu.packetboard.board.CachedBoardModel;
 import io.github.aivruu.packetboard.config.ConfigurationProvider;
 import io.github.aivruu.packetboard.config.object.SettingsConfigModel;
+import io.github.aivruu.packetboard.placeholder.PlaceholderParsingUtils;
 import io.github.aivruu.packetboard.repository.RepositoryModel;
 import io.github.aivruu.packetboard.thread.CustomThreadConstants;
 import io.github.aivruu.packetboard.thread.CustomThreadExecutorModel;
+import net.kyori.adventure.text.Component;
+import org.bukkit.entity.Player;
 
 public class AsyncLinesUpdateThread extends CustomThreadExecutorModel {
   private ConfigurationProvider<SettingsConfigModel> settingsConfigProvider;
@@ -42,7 +45,7 @@ public class AsyncLinesUpdateThread extends CustomThreadExecutorModel {
     final var config = this.settingsConfigProvider.configModel();
     for (final var cachedBoardModel : this.boardRepository.findAllSync()) {
       if (!cachedBoardModel.visible()) continue;
-      // Don't update lines for toggled-off scoreboards.
+      // Internal lines processing depending on selected scoreboard-mode.
       this.processIteratedBoard(config, this.index, cachedBoardModel);
     }
   }
@@ -55,26 +58,32 @@ public class AsyncLinesUpdateThread extends CustomThreadExecutorModel {
   private void processIteratedBoard(final SettingsConfigModel config, final byte index, final CachedBoardModel cachedBoardModel) {
     final var player = cachedBoardModel.player();
     switch (config.mode) {
-      case GLOBAL ->
-        cachedBoardModel.line(index, config.globalLines[this.validateIndexValue(index, config.globalLines.length)]);
+      case GLOBAL -> cachedBoardModel.line(index, this.process(player, config.globalLines, index));
       case WORLD -> {
         for (final var worldSection : config.scoreboardWorld) {
           if (!player.getWorld().getName().equals(worldSection.designedWorld)) continue;
-          cachedBoardModel.lineWithoutUpdate(index, worldSection.lines[this.validateIndexValue(index, worldSection.lines.length)]);
+          cachedBoardModel.lineWithoutMutation(index, this.process(player, worldSection.lines, index));
         }
       }
       case PERMISSION -> {
         for (final var permissionSection : config.scoreboardPermission) {
           if (!player.hasPermission(permissionSection.node)) continue;
-          cachedBoardModel.lineWithoutUpdate(index, permissionSection.lines[this.validateIndexValue(index, permissionSection.lines.length)]);
+          cachedBoardModel.lineWithoutMutation(index, this.process(player, permissionSection.lines, index));
         }
       }
       case GROUP -> {
         for (final var groupSection : config.scoreboardGroup) {
           // Group validation logic.
-          cachedBoardModel.lineWithoutUpdate(index, groupSection.lines[index]);
+          cachedBoardModel.lineWithoutMutation(index, this.process(player, groupSection.lines, index));
         }
       }
     }
+  }
+
+  private Component process(final Player player, final Component[] lines, final byte index) {
+    // Current given index validation for each line of the array.
+    final var validatedLineIndex = this.validateIndexValue(index, lines.length);
+    // Return component with placeholders-parsing.
+    return PlaceholderParsingUtils.parse(player, lines[validatedLineIndex]);
   }
 }
