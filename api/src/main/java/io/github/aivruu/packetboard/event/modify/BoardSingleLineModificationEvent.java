@@ -31,10 +31,10 @@ import org.bukkit.event.HandlerList;
 public class BoardSingleLineModificationEvent extends Event {
   private static final HandlerList HANDLER_LIST = new HandlerList();
   private final Player player;
-  private final byte number;
+  private final int number;
   private final Component newLine;
 
-  public BoardSingleLineModificationEvent(final Player player, final byte number, final Component newLine) {
+  public BoardSingleLineModificationEvent(final Player player, final int number, final Component newLine) {
     this.player = player;
     this.number = number;
     this.newLine = newLine;
@@ -56,7 +56,7 @@ public class BoardSingleLineModificationEvent extends Event {
    * @return The number of the line that will be modified.
    * @since 1.0.0
    */
-  public byte number() {
+  public int number() {
     return this.number;
   }
 
