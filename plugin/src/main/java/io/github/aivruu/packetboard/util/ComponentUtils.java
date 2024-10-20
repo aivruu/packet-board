@@ -21,7 +21,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
-public class ComponentParserUtils {
+public class ComponentUtils {
   private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
   public static final PlainTextComponentSerializer PLAIN_TEXT_COMPONENT_SERIALIZER
     = PlainTextComponentSerializer.plainText();
@@ -38,7 +38,7 @@ public class ComponentParserUtils {
     return componentBuilder.build();
   }
 
-  public static String serializeToPlain(final Component text) {
+  public static String plain(final Component text) {
     return PLAIN_TEXT_COMPONENT_SERIALIZER.serialize(text);
   }
 }
