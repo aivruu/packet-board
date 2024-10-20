@@ -17,7 +17,7 @@
 package io.github.aivruu.packetboard.board;
 
 import io.github.aivruu.packetboard.board.status.BoardModificationStatusProvider;
-import io.github.aivruu.packetboard.packet.PacketProviderAccessor;
+import io.github.aivruu.packetboard.packet.VersionPacketProviderModel;
 import io.github.aivruu.packetboard.repository.CachableModel;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -27,7 +27,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 
 /**
- * This record is used as cachable-model to represent active scoreboards for any connected player.
+ * This record is used to represent an active scoreboard for this specific online player.
  *
  * @param id the player's unique id.
  * @param objectiveId the scoreboard's objective's unique id.
@@ -36,7 +36,8 @@ import java.util.UUID;
  * @param visible if the scoreboard is turned-on or not.
  * @since 1.0.0
  */
-public record CachedBoardModel(String id, String objectiveId, Component title, Component[] lines, boolean visible) implements CachableModel {
+public record CachedBoardModel(String id, String objectiveId, Component title, Component[] lines, boolean visible,
+                               VersionPacketProviderModel packetAdaptation) implements CachableModel {
   /**
    * Returns the {@link Player} reference for this scoreboard's owner based on the owner's unique id.
    *
@@ -65,7 +66,7 @@ public record CachedBoardModel(String id, String objectiveId, Component title, C
       return BoardModificationStatusProvider.withError();
     }
     // Send packets to the player with scoreboard information and attributes.
-    PacketProviderAccessor.PACKET_PROVIDER_IMPL.create(player, this.objectiveId, this.title, this.lines);
+    this.packetAdaptation.create(player, this.objectiveId, this.title, this.lines);
     return BoardModificationStatusProvider.withCreate();
   }
 
@@ -85,7 +86,7 @@ public record CachedBoardModel(String id, String objectiveId, Component title, C
     if (player == null) {
       return BoardModificationStatusProvider.withError();
     }
-    PacketProviderAccessor.PACKET_PROVIDER_IMPL.delete(player, this.objectiveId);
+    this.packetAdaptation.delete(player, this.objectiveId);
     return BoardModificationStatusProvider.withDelete();
   }
 
@@ -108,13 +109,11 @@ public record CachedBoardModel(String id, String objectiveId, Component title, C
     if (player == null) {
       return BoardModificationStatusProvider.withError();
     }
-    // Basically, if the scoreboard was already turned-off or not, we show, or hide the board to the player,
-    // and we provide a new object-instance with the updated information.
-    if (!visible) {
-      PacketProviderAccessor.PACKET_PROVIDER_IMPL.create(player, this.objectiveId, this.title, this.lines);
+    if (!this.visible) {
+      this.packetAdaptation.create(player, this.objectiveId, this.title, this.lines);
       return BoardModificationStatusProvider.withTurnOn(this.id, this.objectiveId, this.title, this.lines);
     }
-    PacketProviderAccessor.PACKET_PROVIDER_IMPL.delete(player, this.objectiveId);
+    this.packetAdaptation.delete(player, this.objectiveId);
     return BoardModificationStatusProvider.withTurnOff(this.id, this.objectiveId, this.title, this.lines);
   }
 
@@ -126,8 +125,10 @@ public record CachedBoardModel(String id, String objectiveId, Component title, C
    */
   public void titleWithoutMutation(final Component text) {
     final var player = this.player();
-    if (player == null) return;
-    PacketProviderAccessor.PACKET_PROVIDER_IMPL.sendTitle(player, text, this.objectiveId);
+    if (player == null) {
+      return;
+    }
+    this.packetAdaptation.sendTitle(player, text, this.objectiveId);
   }
 
   /**
@@ -147,7 +148,7 @@ public record CachedBoardModel(String id, String objectiveId, Component title, C
     if (player == null) {
       return BoardModificationStatusProvider.withError();
     }
-    PacketProviderAccessor.PACKET_PROVIDER_IMPL.sendTitle(player, title, this.objectiveId);
+    this.packetAdaptation.sendTitle(player, title, this.objectiveId);
     return BoardModificationStatusProvider.withModifiedTitle(this.id, this.objectiveId, title, this.lines);
   }
 
@@ -159,8 +160,10 @@ public record CachedBoardModel(String id, String objectiveId, Component title, C
    */
   public void linesWithoutMutation(final Component... lines) {
     final var player = this.player();
-    if (player == null) return;
-    PacketProviderAccessor.PACKET_PROVIDER_IMPL.sendLines(player, this.objectiveId, lines);
+    if (player == null) {
+      return;
+    }
+    this.packetAdaptation.sendLines(player, this.objectiveId, lines);
   }
 
   /**
@@ -180,7 +183,7 @@ public record CachedBoardModel(String id, String objectiveId, Component title, C
     if (player == null) {
       return BoardModificationStatusProvider.withError();
     }
-    PacketProviderAccessor.PACKET_PROVIDER_IMPL.sendLines(player, this.objectiveId, lines);
+    this.packetAdaptation.sendLines(player, this.objectiveId, lines);
     return BoardModificationStatusProvider.withModifiedLines(this.id, this.objectiveId, this.title, lines);
   }
 
@@ -193,8 +196,10 @@ public record CachedBoardModel(String id, String objectiveId, Component title, C
    */
   public void lineWithoutMutation(final int line, final Component text) {
     final var player = this.player();
-    if (player == null) return;
-    PacketProviderAccessor.PACKET_PROVIDER_IMPL.sendLine(player, (this.lines.length - line), text, this.objectiveId);
+    if (player == null) {
+      return;
+    }
+    this.packetAdaptation.sendLine(player, (this.lines.length - line), text, this.objectiveId);
   }
 
   /**
@@ -216,7 +221,7 @@ public record CachedBoardModel(String id, String objectiveId, Component title, C
     if (player == null || line >= this.lines.length || line < 0) {
       return BoardModificationStatusProvider.withError();
     }
-    PacketProviderAccessor.PACKET_PROVIDER_IMPL.sendLine(player, (this.lines.length - line), text, this.objectiveId);
+    this.packetAdaptation.sendLine(player, (this.lines.length - line), text, this.objectiveId);
     // Array modification to include new changed-line.
     final var modifiedLinesArray = new Component[this.lines.length];
     for (byte i = 0; i < this.lines.length; i++) {
@@ -249,7 +254,7 @@ public record CachedBoardModel(String id, String objectiveId, Component title, C
       if (i == line) continue;
       newLines[i] = this.lines[i];
     }
-    PacketProviderAccessor.PACKET_PROVIDER_IMPL.sendLines(player, this.objectiveId, newLines);
+    this.packetAdaptation.sendLines(player, this.objectiveId, newLines);
     return BoardModificationStatusProvider.withModifiedLines(this.id, this.objectiveId, this.title, newLines);
   }
 }

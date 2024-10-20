@@ -17,6 +17,7 @@
 package io.github.aivruu.packetboard.board.status;
 
 import io.github.aivruu.packetboard.board.CachedBoardModel;
+import io.github.aivruu.packetboard.packet.PacketProviderAccessor;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.Nullable;
 
@@ -104,7 +105,8 @@ public record BoardModificationStatusProvider(byte status, @Nullable CachedBoard
    */
   public static BoardModificationStatusProvider withTurnOff(final String id, final String objectiveId, final Component title,
                                                             final Component[] lines) {
-    return new BoardModificationStatusProvider(TURNED_OFF_STATUS, new CachedBoardModel(id, objectiveId, title, lines, false));
+    return new BoardModificationStatusProvider(TURNED_OFF_STATUS, new CachedBoardModel(id, objectiveId, title, lines, false,
+      PacketProviderAccessor.adaptation()));
   }
 
   /**
@@ -120,7 +122,8 @@ public record BoardModificationStatusProvider(byte status, @Nullable CachedBoard
    */
   public static BoardModificationStatusProvider withTurnOn(final String id, final String objectiveId, final Component title,
                                                            final Component[] lines) {
-    return new BoardModificationStatusProvider(TURNED_ON_STATUS, new CachedBoardModel(id, objectiveId, title, lines, true));
+    return new BoardModificationStatusProvider(TURNED_ON_STATUS, new CachedBoardModel(id, objectiveId, title, lines, true,
+      PacketProviderAccessor.adaptation()));
   }
 
   /**
@@ -136,7 +139,8 @@ public record BoardModificationStatusProvider(byte status, @Nullable CachedBoard
    */
   public static BoardModificationStatusProvider withModifiedTitle(final String id, final String objectiveId, final Component newTitle,
                                                                   final Component[] lines) {
-    return new BoardModificationStatusProvider(MODIFIED_TITLE_STATUS, new CachedBoardModel(id, objectiveId, newTitle, lines, true));
+    return new BoardModificationStatusProvider(MODIFIED_TITLE_STATUS, new CachedBoardModel(id, objectiveId, newTitle, lines, true,
+      PacketProviderAccessor.adaptation()));
   }
 
   /**
@@ -152,7 +156,8 @@ public record BoardModificationStatusProvider(byte status, @Nullable CachedBoard
    */
   public static BoardModificationStatusProvider withModifiedLines(final String id, final String objectiveId, final Component title,
                                                                   final Component[] newLines) {
-    return new BoardModificationStatusProvider(MODIFIED_LINES_STATUS, new CachedBoardModel(id, objectiveId, title, newLines, true));
+    return new BoardModificationStatusProvider(MODIFIED_LINES_STATUS, new CachedBoardModel(id, objectiveId, title, newLines, true,
+      PacketProviderAccessor.adaptation()));
   }
 
   /**
