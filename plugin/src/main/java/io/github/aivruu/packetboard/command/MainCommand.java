@@ -19,7 +19,7 @@ package io.github.aivruu.packetboard.command;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.github.aivruu.packetboard.PacketBoardPlugin;
-import io.github.aivruu.packetboard.util.ComponentParserUtils;
+import io.github.aivruu.packetboard.util.ComponentUtils;
 import io.github.aivruu.packetboard.config.ConfigurationProvider;
 import io.github.aivruu.packetboard.config.object.MessagesConfigModel;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -48,13 +48,13 @@ public class MainCommand implements RegistrableCommandModel {
       .executes(commandContext -> {
         commandContext.getSource()
           .getSender()
-          .sendMessage(ComponentParserUtils.apply("<gradient:yellow:green>Running PacketBoard plugin on version '1.0.0'."));
+          .sendMessage(ComponentUtils.apply("<gradient:yellow:green>Running PacketBoard plugin on version '1.0.0'."));
         return Command.SINGLE_SUCCESS;
       })
       .then(Commands.literal("help")
         .requires(source -> source.getSender().hasPermission("packetboard.command.help"))
         .executes(commandContext -> {
-          commandContext.getSource().getSender().sendMessage(ComponentParserUtils.apply(
+          commandContext.getSource().getSender().sendMessage(ComponentUtils.apply(
             this.messagesConfigProvider.configModel().help));
           return Command.SINGLE_SUCCESS;
         })
@@ -65,9 +65,9 @@ public class MainCommand implements RegistrableCommandModel {
           final var messages = this.messagesConfigProvider.configModel();
           final var sender = commandContext.getSource().getSender();
           if (this.plugin.reload()) {
-            sender.sendMessage(ComponentParserUtils.apply(messages.reloadSuccess));
+            sender.sendMessage(ComponentUtils.apply(messages.reloadSuccess));
           } else {
-            sender.sendMessage(ComponentParserUtils.apply(messages.reloadFailed));
+            sender.sendMessage(ComponentUtils.apply(messages.reloadFailed));
           }
           return Command.SINGLE_SUCCESS;
         })
