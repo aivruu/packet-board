@@ -20,13 +20,15 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import io.github.aivruu.packetboard.util.ComponentParserUtils;
+import io.github.aivruu.packetboard.util.ComponentUtils;
 import io.github.aivruu.packetboard.config.ConfigurationProvider;
 import io.github.aivruu.packetboard.config.object.MessagesConfigModel;
 import io.github.aivruu.packetboard.config.object.SettingsConfigModel;
 import io.github.aivruu.packetboard.manager.BoardManager;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.entity.Player;
 
@@ -46,15 +48,14 @@ public class ScoreboardControlCommand implements RegistrableCommandModel {
 
   @Override
   public List<String> alias() {
-    return List.of("sb");
+    return List.of("sb", "b");
   }
 
   @Override
   @SuppressWarnings("UnstableApiUsage")
   public LiteralCommandNode<CommandSourceStack> register() {
     return Commands.literal("board")
-      .requires(sender ->
-        sender instanceof final Player player && player.hasPermission("packetboard.command.scoreboard"))
+      .requires(sender -> sender instanceof final Player player && player.hasPermission("packetboard.command.scoreboard"))
       .executes(commandContext -> {
         commandContext.getSource()
           .getSender()
@@ -67,65 +68,82 @@ public class ScoreboardControlCommand implements RegistrableCommandModel {
           final var player = (Player) commandContext.getSource().getSender();
           final var messages = this.messagesConfigProvider.configModel();
           if (this.boardManager.toggle(player)) {
-            player.sendMessage(ComponentParserUtils.apply(messages.scoreboardTurnedOn));
+            player.sendMessage(ComponentUtils.apply(messages.scoreboardTurnedOn));
           } else {
-            player.sendMessage(ComponentParserUtils.apply(messages.scoreboardTurnedOff));
+            player.sendMessage(ComponentUtils.apply(messages.scoreboardTurnedOff));
           }
           return Command.SINGLE_SUCCESS;
         })
       )
-      .then(Commands.argument("title", StringArgumentType.string())
+      .then(Commands.literal("title")
         .requires(source -> source.getSender().hasPermission("packetboard.command.title"))
-        .executes(commandContext -> {
-          final var messages = this.messagesConfigProvider.configModel();
-          final var sender = commandContext.getSource().getSender();
-          if (this.settingsConfigProvider.configModel().enableAnimatedTitleFeature) {
-            sender.sendMessage(ComponentParserUtils.apply(messages.scoreboardTitleControlDisabled));
-          } else {
-            final var parsedGivenTitle = ComponentParserUtils.apply(StringArgumentType.getString(commandContext, "title"));
-            // Sender casting into Player and title modification trigger.
-            this.boardManager.title((Player) sender, parsedGivenTitle);
-            sender.sendMessage(ComponentParserUtils.apply(messages.scoreboardTitleModified));
-          }
-          return Command.SINGLE_SUCCESS;
-        })
-      )
-      .then(Commands.argument("line", IntegerArgumentType.integer(1, 16))
-        .then(Commands.argument("content", StringArgumentType.string())
-          .requires(source -> source.getSender().hasPermission("packetboard.command.line"))
+        .then(Commands.argument("text", StringArgumentType.string())
           .executes(commandContext -> {
             final var messages = this.messagesConfigProvider.configModel();
             final var sender = commandContext.getSource().getSender();
-            final var specifiedLineNumber = IntegerArgumentType.getInteger(commandContext, "line");
-            final var specifiedContent = StringArgumentType.getString(commandContext, "content");
-            // Sender casting into Player, line modification trigger and result verification.
-            final var changedLine = this.boardManager.line((Player) sender, specifiedLineNumber,
-              ComponentParserUtils.apply(specifiedContent));
-            if (changedLine) {
-              sender.sendMessage(ComponentParserUtils.apply(messages.scoreboardLineModified,
-                Placeholder.parsed("line", Integer.toString(specifiedLineNumber))));
+            if (this.settingsConfigProvider.configModel().enableAnimatedTitleFeature) {
+              sender.sendMessage(ComponentUtils.apply(messages.scoreboardTitleControlDisabled));
             } else {
-              sender.sendMessage(ComponentParserUtils.apply(messages.scoreboardLineUnmodified));
+              final var parsedGivenTitle = ComponentUtils.apply(StringArgumentType.getString(commandContext, "text"));
+              // Sender casting into Player and title modification trigger.
+              this.boardManager.title((Player) sender, parsedGivenTitle);
+              sender.sendMessage(ComponentUtils.apply(messages.scoreboardTitleModified));
             }
             return Command.SINGLE_SUCCESS;
           })
         )
       )
-      .then(Commands.argument("remove", IntegerArgumentType.integer(1, 16))
-        .requires(source -> source.getSender().hasPermission("packetboard.command.remove"))
-        .executes(commandContext -> {
-          final var messages = this.messagesConfigProvider.configModel();
-          final var sender = commandContext.getSource().getSender();
-          final var specifiedLineNumber = IntegerArgumentType.getInteger(commandContext, "remove");
-          // Sender casting into Player, line removal trigger and result verification.
-          final var removedLine = this.boardManager.removeLine((Player) sender, specifiedLineNumber);
-          if (removedLine) {
-            sender.sendMessage(ComponentParserUtils.apply(messages.scoreboardLineRemoved));
-          } else {
-            sender.sendMessage(ComponentParserUtils.apply(messages.scoreboardLineDeletionFailed));
-          }
+      .then(Commands.literal("line")
+        .requires(source -> source.getSender().hasPermission("packetboard.command.line"))
+        .executes(ctx -> {
+          ctx.getSource().getSender().sendMessage(Component.text("Missing scoreboard line!").color(NamedTextColor.RED));
           return Command.SINGLE_SUCCESS;
         })
+        .then(Commands.argument("number", IntegerArgumentType.integer(1, 16))
+          .executes(ctx -> {
+            ctx.getSource().getSender().sendMessage(Component.text("Missing scoreboard line's content!").color(NamedTextColor.RED));
+            return Command.SINGLE_SUCCESS;
+          })
+          .then(Commands.argument("content", StringArgumentType.string())
+            .executes(commandContext -> {
+              final var messages = this.messagesConfigProvider.configModel();
+              final var sender = commandContext.getSource().getSender();
+              final var specifiedLineNumber = IntegerArgumentType.getInteger(commandContext, "line");
+              final var specifiedContent = StringArgumentType.getString(commandContext, "content");
+              final var changedLine = this.boardManager.line((Player) sender, specifiedLineNumber,
+                ComponentUtils.apply(specifiedContent));
+              if (changedLine) {
+                sender.sendMessage(ComponentUtils.apply(messages.scoreboardLineModified,
+                  Placeholder.parsed("line", Integer.toString(specifiedLineNumber))));
+              } else {
+                sender.sendMessage(ComponentUtils.apply(messages.scoreboardLineUnmodified));
+              }
+              return Command.SINGLE_SUCCESS;
+            })
+          )
+        )
+      )
+      .then(Commands.literal("remove")
+        .requires(source -> source.getSender().hasPermission("packetboard.command.remove"))
+        .executes(ctx -> {
+          ctx.getSource().getSender().sendMessage(Component.text("Missing scoreboard line!").color(NamedTextColor.RED));
+          return Command.SINGLE_SUCCESS;
+        })
+        .then(Commands.argument("number", IntegerArgumentType.integer(1, 16))
+          .executes(commandContext -> {
+            final var messages = this.messagesConfigProvider.configModel();
+            final var sender = commandContext.getSource().getSender();
+            final var specifiedLineNumber = IntegerArgumentType.getInteger(commandContext, "remove");
+            // Sender casting into Player, line removal trigger and result verification.
+            final var removedLine = this.boardManager.removeLine((Player) sender, specifiedLineNumber);
+            if (removedLine) {
+              sender.sendMessage(ComponentUtils.apply(messages.scoreboardLineRemoved));
+            } else {
+              sender.sendMessage(ComponentUtils.apply(messages.scoreboardLineDeletionFailed));
+            }
+            return Command.SINGLE_SUCCESS;
+          })
+        )
       )
       .build();
   }
