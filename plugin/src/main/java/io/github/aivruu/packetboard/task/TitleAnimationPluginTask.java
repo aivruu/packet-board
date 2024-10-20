@@ -17,7 +17,7 @@
 package io.github.aivruu.packetboard.task;
 
 import io.github.aivruu.packetboard.board.CachedBoardModel;
-import io.github.aivruu.packetboard.util.PlaceholderParsingUtils;
+import io.github.aivruu.packetboard.util.PlaceholderUtils;
 import io.github.aivruu.packetboard.repository.RepositoryModel;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import net.kyori.adventure.text.Component;
@@ -47,8 +47,7 @@ public class TitleAnimationPluginTask implements Consumer<ScheduledTask> {
     for (final var cachedBoardModel : this.boardRepository.findAllSync()) {
       if (!cachedBoardModel.visible()) continue;
       // Set new scoreboard-title with placeholders-processing.
-      cachedBoardModel.titleWithoutMutation(
-        PlaceholderParsingUtils.parse(cachedBoardModel.player(), this.content[this.index]));
+      cachedBoardModel.titleWithoutMutation(PlaceholderUtils.parse(cachedBoardModel.player(), this.content[this.index]));
     }
   }
 }

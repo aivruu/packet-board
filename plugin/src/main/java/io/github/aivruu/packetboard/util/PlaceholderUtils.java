@@ -22,7 +22,7 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-public class PlaceholderParsingUtils {
+public class PlaceholderUtils {
   /** Used for from Legacy to Component parsing for PlaceholderAPI it's placeholders with legacy-chars support. */
   private static final LegacyComponentSerializer LEGACY_COMPONENT_SERIALIZER = LegacyComponentSerializer.legacyAmpersand();
   private static final boolean PLACEHOLDER_API_AVAILABLE;
@@ -44,8 +44,9 @@ public class PlaceholderParsingUtils {
    * @since 1.0.0
    */
   public static Component parse(final Player player, final Component text) {
-    if (!PLACEHOLDER_API_AVAILABLE) return text;
-    // Serialize given component into string for placeholders applying.
+    if (!PLACEHOLDER_API_AVAILABLE) {
+      return text;
+    }
     final var parsedToLegacyText = LEGACY_COMPONENT_SERIALIZER.serialize(text);
     return LEGACY_COMPONENT_SERIALIZER.deserialize(PlaceholderAPI.setPlaceholders(player, parsedToLegacyText));
   }
