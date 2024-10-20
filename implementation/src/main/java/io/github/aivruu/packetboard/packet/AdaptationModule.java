@@ -24,15 +24,17 @@ import net.minecraft.network.protocol.game.ClientboundSetDisplayObjectivePacket;
 import net.minecraft.network.protocol.game.ClientboundSetObjectivePacket;
 import net.minecraft.network.protocol.game.ClientboundSetScorePacket;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.ServerScoreboard;
 import net.minecraft.server.network.ServerPlayerConnection;
 import net.minecraft.world.scores.DisplaySlot;
 import net.minecraft.world.scores.Objective;
+import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
 import java.util.Optional;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * {@link VersionPacketProviderModel} implementation for internal packets-handling for scoreboards
@@ -40,35 +42,24 @@ import java.util.Optional;
  *
  * @since 1.0.0
  */
-public class VersionPacketProviderImpl implements VersionPacketProviderModel {
+public class AdaptationModule implements VersionPacketProviderModel {
+  private static final Map<String, ClientboundSetScorePacket[]> SET_SCORE_PACKET_BY_UUID = new ConcurrentHashMap<>();
   private static final Optional<NumberFormat> NUMBER_FORMAT = Optional.of(BlankFormat.INSTANCE);
-  private final ServerScoreboard serverScoreboard = MinecraftServer.getServer().getScoreboard();
-  private ClientboundSetScorePacket clientboundSetScorePacket;
+  private final Scoreboard scoreboard = MinecraftServer.getServer().getScoreboard();
 
   @Override
   public void create(final Player player, final String scoreboardObjectiveId, final Component title, final Component... lines) {
     final var serverPlayerConnection = ((CraftPlayer) player).getHandle().connection;
-    final var playerOwnerId = player.getUniqueId().toString();
     // Scoreboard objectives declaration and packet-sending.
-    final var objective = this.serverScoreboard.addObjective(scoreboardObjectiveId, ObjectiveCriteria.DUMMY,
+    final var objective = this.scoreboard.addObjective(scoreboardObjectiveId, ObjectiveCriteria.DUMMY,
       new AdventureComponent(title), ObjectiveCriteria.RenderType.INTEGER, false, BlankFormat.INSTANCE);
     serverPlayerConnection.send(new ClientboundSetObjectivePacket(objective, ClientboundSetObjectivePacket.METHOD_REMOVE));
     serverPlayerConnection.send(new ClientboundSetObjectivePacket(objective, ClientboundSetObjectivePacket.METHOD_ADD));
     serverPlayerConnection.send(new ClientboundSetDisplayObjectivePacket(DisplaySlot.SIDEBAR, objective));
-    // Scoreboard scores declaration and packet-sending.
-    for (int i = 0; i < lines.length; i++) {
-      this.sendScorePacket(serverPlayerConnection, playerOwnerId, objective.getName(),
-        (lines.length - i), new AdventureComponent(lines[i]));
+    // Lines processing for set-score-packets and sending.
+    for (final var clientboundSetScorePacket : this.processLinesToPacketArray(player, objective, lines)) {
+      serverPlayerConnection.send(clientboundSetScorePacket);
     }
-  }
-
-  private void sendScorePacket(final ServerPlayerConnection serverPlayerConnection, final String ownerName, final String objectiveName,
-                               final int scoreIndex, final net.minecraft.network.chat.Component component) {
-    this.clientboundSetScorePacket = new ClientboundSetScorePacket(
-      ownerName, objectiveName, scoreIndex,
-      Optional.of(component),
-      NUMBER_FORMAT);
-    serverPlayerConnection.send(clientboundSetScorePacket);
   }
 
   private void sendObjectivePackets(final ServerPlayerConnection serverPlayerConnection, final Objective objective) {
@@ -81,38 +72,61 @@ public class VersionPacketProviderImpl implements VersionPacketProviderModel {
   @Override
   public void sendLines(final Player player, final String scoreboardObjectiveId, final Component... lines) {
     final var serverPlayerConnection = ((CraftPlayer) player).getHandle().connection;
-    final var objective = this.serverScoreboard.getObjective(scoreboardObjectiveId);
+    final var objective = this.scoreboard.getObjective(scoreboardObjectiveId);
     this.sendObjectivePackets(serverPlayerConnection, objective);
-    for (int i = 0; i < lines.length; i++) {
-      this.sendScorePacket(serverPlayerConnection, player.getName(), objective.getName(),
-        (lines.length - i), new AdventureComponent(lines[i]));
+    for (final var clientboundSetScorePacket : this.processLinesToPacketArray(player, objective, lines)) {
+      serverPlayerConnection.send(clientboundSetScorePacket);
     }
   }
 
   @Override
   public void sendLine(final Player player, final int line, final Component text, final String scoreboardObjectiveId) {
     final var serverPlayerConnection = ((CraftPlayer) player).getHandle().connection;
-    final var objective = this.serverScoreboard.getObjective(scoreboardObjectiveId);
+    final var objective = this.scoreboard.getObjective(scoreboardObjectiveId);
     this.sendObjectivePackets(serverPlayerConnection, objective);
-    this.sendScorePacket(serverPlayerConnection, player.getUniqueId().toString(), objective.getName(),
-      line, new AdventureComponent(text));
+    this.processLineToPacketArray(player, objective, line, text);
+    for (final var clientboundSetScorePacket : this.processLineToPacketArray(player, objective, line, text)) {
+      serverPlayerConnection.send(clientboundSetScorePacket);
+    }
   }
 
   @Override
   public void sendTitle(final Player player, final Component title, final String scoreboardObjectiveId) {
-    final var serverPlayerConnection = ((CraftPlayer) player).getHandle().connection;
-    final var objective = this.serverScoreboard.getObjective(scoreboardObjectiveId);
+    final var objective = this.scoreboard.getObjective(scoreboardObjectiveId);
     // The objective for this player's scoreboard never will be null at this point.
     objective.setDisplayName(new AdventureComponent(title));
-    serverPlayerConnection.send(new ClientboundSetObjectivePacket(objective, ClientboundSetObjectivePacket.METHOD_CHANGE));
+    ((CraftPlayer) player).getHandle().connection.send(new ClientboundSetObjectivePacket(objective, ClientboundSetObjectivePacket.METHOD_CHANGE));
   }
 
   @Override
   public void delete(final Player player, final String scoreboardObjectiveId) {
-    final var objective = this.serverScoreboard.getObjective(scoreboardObjectiveId);
+    final var objective = this.scoreboard.getObjective(scoreboardObjectiveId);
     // The objective for this player's scoreboard never will be null at this point.
-    ((CraftPlayer) player).getHandle().connection
-      .send(new ClientboundSetObjectivePacket(objective, ClientboundSetObjectivePacket.METHOD_REMOVE));
-    this.serverScoreboard.removeObjective(objective);
+    this.scoreboard.removeObjective(objective);
+    SET_SCORE_PACKET_BY_UUID.remove(player.getUniqueId().toString());
+    ((CraftPlayer) player).getHandle().connection.send(new ClientboundSetObjectivePacket(objective, ClientboundSetObjectivePacket.METHOD_REMOVE));
+  }
+
+  private ClientboundSetScorePacket[] processLinesToPacketArray(final Player player, final Objective objective, final Component[] lines) {
+    final var packetArray = new ClientboundSetScorePacket[lines.length];
+    for (byte i = 0 ; i < packetArray.length ; i++) {
+      packetArray[i] = new ClientboundSetScorePacket(player.getName(), objective.getName(), (lines.length - i),
+        Optional.of(new AdventureComponent(lines[i])), NUMBER_FORMAT);
+    }
+    SET_SCORE_PACKET_BY_UUID.put(player.getUniqueId().toString(), packetArray);
+    return packetArray;
+  }
+
+  private ClientboundSetScorePacket[] processLineToPacketArray(final Player player, final Objective objective, final int number,
+                                                               final Component line) {
+    final var packetArray = SET_SCORE_PACKET_BY_UUID.get(player.getUniqueId().toString());
+    for (byte i = 0 ; i < packetArray.length ; i++) {
+      if (i != number) {
+        continue;
+      }
+      packetArray[i] = new ClientboundSetScorePacket(player.getName(), objective.getName(), number, Optional.of(new AdventureComponent(line)), NUMBER_FORMAT);
+      break;
+    }
+    return packetArray;
   }
 }
