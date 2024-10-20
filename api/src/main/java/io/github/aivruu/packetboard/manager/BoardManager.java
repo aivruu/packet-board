@@ -24,6 +24,7 @@ import io.github.aivruu.packetboard.event.modify.BoardSingleLineModificationEven
 import io.github.aivruu.packetboard.event.modify.BoardTitleModificationEvent;
 import io.github.aivruu.packetboard.event.general.BoardToggleEvent;
 import io.github.aivruu.packetboard.board.BoardRepositoryModel;
+import io.github.aivruu.packetboard.packet.PacketProviderAccessor;
 import io.github.aivruu.packetboard.repository.RepositoryModel;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -76,7 +77,7 @@ public class BoardManager {
    */
   public boolean create(final Player player, final Component title, final Component... lines) {
     final var cachedBoardModel = new CachedBoardModel(player.getUniqueId().toString(),
-      SCOREBOARD_OBJECTIVE_BASE_FORMAT.formatted(RANDOM.nextInt()), title, lines, true);
+      SCOREBOARD_OBJECTIVE_BASE_FORMAT.formatted(RANDOM.nextInt()), title, lines, true, PacketProviderAccessor.adaptation());
     final var boardCreateEvent = new BoardCreateEvent(player, cachedBoardModel);
     Bukkit.getPluginManager().callEvent(boardCreateEvent);
     // Check additionally if the scoreboard could be shown to the player.
@@ -99,8 +100,6 @@ public class BoardManager {
    */
   public boolean delete(final Player player) {
     Bukkit.getPluginManager().callEvent(new BoardDeleteEvent(player));
-    // Board deleting for player, and from repository's cache.
-    // Ignore provided status for deletion operation, the model must be removed from cache.
     return this.boardRepository.deleteSync(player.getUniqueId().toString());
   }
 
@@ -181,7 +180,7 @@ public class BoardManager {
     if (lineModificationStatus.error()) {
       return false;
     }
-    Bukkit.getPluginManager().callEvent(new BoardSingleLineModificationEvent(player, (byte) line, text));
+    Bukkit.getPluginManager().callEvent(new BoardSingleLineModificationEvent(player, line, text));
     // Update previous board-model with new modified model.
     this.boardRepository.updateSync(lineModificationStatus.result());
     return true;
