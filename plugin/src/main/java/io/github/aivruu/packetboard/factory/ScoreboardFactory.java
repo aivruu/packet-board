@@ -16,7 +16,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 package io.github.aivruu.packetboard.factory;
 
-import io.github.aivruu.packetboard.util.ComponentParserUtils;
+import io.github.aivruu.packetboard.util.ComponentUtils;
 import io.github.aivruu.packetboard.config.object.SettingsConfigModel;
 import io.github.aivruu.packetboard.manager.BoardManager;
 import io.github.aivruu.packetboard.util.LuckPermsUtil;
@@ -31,13 +31,10 @@ public class ScoreboardFactory {
 
   public void create(final Player player, final SettingsConfigModel config) {
     switch (config.mode) {
-      case GLOBAL -> {
-        if (config.enableAnimatedTitleFeature) {
-          this.boardManager.create(player, config.animatedTitleContent[0], config.globalLines);
-        } else {
-          this.boardManager.create(player, ComponentParserUtils.apply(config.globalTitle), config.globalLines);
-        }
-      }
+      case GLOBAL ->
+        this.boardManager.create(player,
+          config.enableAnimatedTitleFeature ? config.animatedTitleContent[0] : ComponentUtils.apply(config.globalTitle),
+          config.globalLines);
       // The title-animation doesn't consider specific modes. so we avoid bugs with the title.
       case WORLD -> {
         if (!config.enableAnimatedTitleFeature) this.fromWorldSections(config, player);
@@ -55,25 +52,25 @@ public class ScoreboardFactory {
     for (final var worldSection : config.scoreboardWorld) {
       if (!player.getWorld().getName().equals(worldSection.designedWorld)) continue;
       // Create scoreboard using this world-section's title and defined content.
-      this.boardManager.create(player, ComponentParserUtils.apply(worldSection.title), worldSection.lines);
+      this.boardManager.create(player, ComponentUtils.apply(worldSection.title), worldSection.lines);
     }
   }
 
   private void fromPermissionSections(final SettingsConfigModel config, final Player player) {
     for (final var permissionSection : config.scoreboardPermission) {
       if (!player.hasPermission(permissionSection.node)) continue;
-      this.boardManager.create(player, ComponentParserUtils.apply(permissionSection.title), permissionSection.lines);
+      this.boardManager.create(player, ComponentUtils.apply(permissionSection.title), permissionSection.lines);
     }
   }
 
   private void fromGroupSections(final SettingsConfigModel config, final Player player) {
     for (final var groupSection : config.scoreboardGroup) {
-      final var playerGroup = LuckPermsUtil.primaryGroup(player.getUniqueId());
+      final var playerGroup = LuckPermsUtil.group(player.getUniqueId());
       // Check if player's user information is available, and its group can see this scoreboard.
       if ((playerGroup == null) || !playerGroup.equals(groupSection.designedGroup)) {
         continue;
       }
-      this.boardManager.create(player, ComponentParserUtils.apply(groupSection.title), groupSection.lines);
+      this.boardManager.create(player, ComponentUtils.apply(groupSection.title), groupSection.lines);
     }
   }
 }
