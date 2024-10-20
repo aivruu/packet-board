@@ -31,7 +31,7 @@ public class PacketProviderAccessor {
    *
    * @since 1.0.0
    */
-  public static final VersionPacketProviderModel PACKET_PROVIDER_IMPL;
+  private static final VersionPacketProviderModel PACKET_PROVIDER_IMPL;
 
   static {
     try {
@@ -43,5 +43,15 @@ public class PacketProviderAccessor {
       // Should never happen due that the implementation-subproject always is compiled with the final jar.
       throw new IllegalStateException("PacketProvider implementation couldn't be found at the jar.");
     }
+  }
+
+  /**
+   * Returns the current {@link VersionPacketProviderModel} instance.
+   *
+   * @return The {@link #PACKET_PROVIDER_IMPL} field's value.
+   * @since 1.0.0
+   */
+  public static VersionPacketProviderModel adaptation() {
+    return PACKET_PROVIDER_IMPL;
   }
 }
