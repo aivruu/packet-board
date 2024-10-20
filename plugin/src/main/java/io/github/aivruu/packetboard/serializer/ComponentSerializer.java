@@ -16,7 +16,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 package io.github.aivruu.packetboard.serializer;
 
-import io.github.aivruu.packetboard.util.ComponentParserUtils;
+import io.github.aivruu.packetboard.util.ComponentUtils;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.configurate.ConfigurationNode;
@@ -32,7 +32,7 @@ public enum ComponentSerializer implements TypeSerializer<Component> {
 
   @Override
   public Component deserialize(final Type type, final ConfigurationNode target) {
-    return (target.getString() == null) ? EMPTY_COMPONENT : ComponentParserUtils.apply(target.getString());
+    return (target.getString() == null) ? EMPTY_COMPONENT : ComponentUtils.apply(target.getString());
   }
 
   @Override
@@ -41,6 +41,6 @@ public enum ComponentSerializer implements TypeSerializer<Component> {
       target.raw(null);
       return;
     }
-    target.set(String.class, ComponentParserUtils.serializeToPlain(obj));
+    target.set(String.class, ComponentUtils.plain(obj));
   }
 }
