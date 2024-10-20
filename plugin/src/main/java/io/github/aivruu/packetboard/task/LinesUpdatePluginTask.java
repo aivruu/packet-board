@@ -18,9 +18,8 @@ package io.github.aivruu.packetboard.task;
 
 import io.github.aivruu.packetboard.board.CachedBoardModel;
 import io.github.aivruu.packetboard.config.object.SettingsConfigModel;
-import io.github.aivruu.packetboard.util.PlaceholderParsingUtils;
+import io.github.aivruu.packetboard.util.PlaceholderUtils;
 import io.github.aivruu.packetboard.repository.RepositoryModel;
-import io.github.aivruu.packetboard.factory.ScoreboardFactory;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
@@ -57,22 +56,22 @@ public class LinesUpdatePluginTask implements Consumer<ScheduledTask> {
   private void processIteratedBoard(final SettingsConfigModel config, final CachedBoardModel cachedBoardModel) {
     final var player = cachedBoardModel.player();
     switch (config.mode) {
-      case GLOBAL -> cachedBoardModel.lineWithoutMutation(this.index, this.process(player, config.globalLines));
+      case GLOBAL -> cachedBoardModel.linesWithoutMutation(this.process(player, config.globalLines));
       case WORLD -> {
         for (final var worldSection : config.scoreboardWorld) {
           if (!player.getWorld().getName().equals(worldSection.designedWorld)) continue;
-          cachedBoardModel.lineWithoutMutation(this.index, this.process(player, worldSection.lines));
+          cachedBoardModel.linesWithoutMutation(this.process(player, worldSection.lines));
         }
       }
       case PERMISSION -> {
         for (final var permissionSection : config.scoreboardPermission) {
           if (!player.hasPermission(permissionSection.node)) continue;
-          cachedBoardModel.lineWithoutMutation(this.index, this.process(player, permissionSection.lines));
+          cachedBoardModel.linesWithoutMutation(this.process(player, permissionSection.lines));
         }
       }
       case GROUP -> {
         for (final var groupSection : config.scoreboardGroup) {
-          cachedBoardModel.lineWithoutMutation(this.index, this.process(player, groupSection.lines));
+          cachedBoardModel.linesWithoutMutation(this.process(player, groupSection.lines));
         }
       }
     }
@@ -82,6 +81,6 @@ public class LinesUpdatePluginTask implements Consumer<ScheduledTask> {
     // Current given index validation for each line of the array.
     this.validateIndexValue(lines.length);
     // Return component with placeholders-parsing.
-    return PlaceholderParsingUtils.parse(player, lines[this.index]);
+    return PlaceholderUtils.parse(player, lines[this.index]);
   }
 }
