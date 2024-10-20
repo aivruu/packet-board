@@ -27,8 +27,7 @@ public class LuckPermsUtil {
   private static final @Nullable UserManager USER_MANAGER;
 
   static {
-    final var pluginManager = Bukkit.getPluginManager();
-    final var luckPermsAvailability = pluginManager.getPlugin("LuckPerms") != null;
+    final var luckPermsAvailability = Bukkit.getPluginManager().getPlugin("LuckPerms") != null;
     USER_MANAGER = luckPermsAvailability ? LuckPermsProvider.get().getUserManager() : null;
   }
 
@@ -37,11 +36,11 @@ public class LuckPermsUtil {
    *
    * @param playerId the player's unique id.
    * @return The player's primary permission-group, or {@code null} if LuckPerms isn't available, or
-   *     player's user-information isn't available.
+   *     player's user-information (not group) isn't available.
    * @see #USER_MANAGER
    * @since 1.0.0
    */
-  public static @Nullable String primaryGroup(final UUID playerId) {
+  public static @Nullable String group(final UUID playerId) {
     if (USER_MANAGER == null) {
       return null;
     }
